@@ -54,7 +54,7 @@ jobs:
         npm install -g github-actions-ctrf
         
         # Convert Maven Surefire XML to CTRF JSON
-        npx xml2ctrf '**/target/surefire-reports/TEST-*.xml' --output ctrf-report.json
+        npx ctf-report '**/target/surefire-reports/TEST-*.xml' --output ctrf-report.json --format junit
         
     - name: Publish Test Summary Results
       run: npx github-actions-ctrf ctrf/ctrf-report.json

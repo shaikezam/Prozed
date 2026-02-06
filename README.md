@@ -1,3 +1,6 @@
+![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
+![CI](https://github.com/shaikezam/prozed/workflows/CI/badge.svg)
+
 # Prozed Framework
 
 A lightweight, high-performance Java web framework built on embedded Tomcat with dependency injection and radix tree routing.

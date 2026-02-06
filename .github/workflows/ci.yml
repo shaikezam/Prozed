@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   actions: read
+  checks: write
 
 jobs:
   build-test:
@@ -45,3 +46,15 @@ jobs:
         path: |
           **/target/surefire-reports/
           **/target/failsafe-reports/
+          
+    - name: Publish Test Results
+      uses: dorny/test-reporter@v2
+      if: always() && github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        name: Maven Tests (Java ${{ matrix.java-version }})
+        path: '**/target/surefire-reports/TEST-*.xml'
+        reporter: java-junit
+        fail-on-error: true
+        use-actions-summary: true
+        report-title: 'Test Results'
+        badge-title: 'tests'

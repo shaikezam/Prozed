@@ -1,13 +1,16 @@
 name: CI
 
 on:
+  pull_request:
   push:
     branches: [ main, master ]
-  pull_request:
-    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
 
 jobs:
-  test:
+  build-test:
     runs-on: ubuntu-latest
     
     strategy:
@@ -34,63 +37,11 @@ jobs:
     - name: Run Maven clean install
       run: mvn clean install -B -V
       
-    - name: Publish Test Results
+    - name: Upload Test Results
       uses: actions/upload-artifact@v4
-      if: always()
+      if: ${{ !cancelled() }}
       with:
         name: test-results-java-${{ matrix.java-version }}
         path: |
           **/target/surefire-reports/
           **/target/failsafe-reports/
-        
-    - name: Comment PR with Test Results
-      if: github.event_name == 'pull_request' && always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const path = './target/surefire-reports';
-          
-          try {
-            if (fs.existsSync(path)) {
-              const files = fs.readdirSync(path);
-              const testFiles = files.filter(f => f.endsWith('.xml'));
-              
-              if (testFiles.length > 0) {
-                console.log(`✅ Found ${testFiles.length} test report(s)`);
-                
-                // Simple test count parsing
-                let totalTests = 0;
-                let totalFailures = 0;
-                
-                testFiles.forEach(file => {
-                  const content = fs.readFileSync(`${path}/${file}`, 'utf8');
-                  const matches = content.match(/tests="(\d+)"/g);
-                  const failures = content.match(/failures="(\d+)"/g);
-                  
-                  if (matches) {
-                    totalTests += matches.reduce((sum, m) => sum + parseInt(m.match(/\d+/)[0]), 0);
-                  }
-                  if (failures) {
-                    totalFailures += failures.reduce((sum, m) => sum + parseInt(m.match(/\d+/)[0]), 0);
-                  }
-                });
-                
-                const status = totalFailures === 0 ? '✅' : '❌';
-                const comment = `${status} **Test Results**\n\n**Tests:** ${totalTests}\n**Failures:** ${totalFailures}\n\nJava ${{ matrix.java-version }}`;
-                
-                github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: comment
-                });
-              } else {
-                console.log('No test reports found');
-              }
-            } else {
-              console.log('Test reports directory does not exist');
-            }
-          } catch (error) {
-            console.log('Error processing test results:', error.message);
-          }

@@ -47,14 +47,10 @@ jobs:
           **/target/surefire-reports/
           **/target/failsafe-reports/
           
-    - name: Generate CTRF Report
-      if: ${{ !cancelled() }}
-      run: |
-        # Install github-actions-ctrf
-        npm install -g github-actions-ctrf
-        
-        # Convert Maven Surefire XML to CTRF JSON
-        npx ctf-report '**/target/surefire-reports/TEST-*.xml' --output ctrf-report.json --format junit
-        
-    - name: Publish Test Summary Results
-      run: npx github-actions-ctrf ctrf/ctrf-report.json
+    - name: Test Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Maven Tests (Java ${{ matrix.java-version }})
+        path: '**/target/surefire-reports/TEST-*.xml'
+        reporter: java-junit

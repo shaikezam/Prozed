@@ -1,5 +1,7 @@
 package prozed.io.core.internal.servlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflaction.PackageScanner;
@@ -15,6 +17,7 @@ public class WebScanner {
     private final RadixRouter router;
     private final ProzedContainer container;
     private final PackageScanner packageScanner = new PackageScanner();
+    private static final Logger logger = LoggerFactory.getLogger(WebScanner.class);
 
     public WebScanner(RadixRouter router, ProzedContainer container) {
         this.router = router;
@@ -50,23 +53,23 @@ public class WebScanner {
 
         if (method.isAnnotationPresent(GetRequest.class)) {
             subPath = method.getAnnotation(GetRequest.class).path();
-            httpMethod = "GET";
+            httpMethod = HttpMethod.GET.name();
         } else if (method.isAnnotationPresent(PostRequest.class)) {
             subPath = method.getAnnotation(PostRequest.class).path();
-            httpMethod = "POST";
+            httpMethod = HttpMethod.POST.name();
         } else if (method.isAnnotationPresent(PutRequest.class)) {
             subPath = method.getAnnotation(PutRequest.class).path();
-            httpMethod = "PUT";
+            httpMethod = HttpMethod.PUT.name();
         } else if (method.isAnnotationPresent(DeleteRequest.class)) {
             subPath = method.getAnnotation(DeleteRequest.class).path();
-            httpMethod = "DELETE";
+            httpMethod = HttpMethod.DELETE.name();
         }
 
         if (subPath != null) {
             String fullPath = normalizePath(basePath, subPath);
             // Add to the Radix Tree for O(k) lookup time
             router.addRoute(httpMethod, fullPath, instance, method);
-            System.out.println("Mapped " + httpMethod + " " + fullPath + " -> " + method.getName());
+            logger.info("Mapped " + httpMethod + " " + fullPath + " -> " + method.getName());
         }
     }
 

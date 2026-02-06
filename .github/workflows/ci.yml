@@ -38,7 +38,7 @@ jobs:
     - name: Run Maven clean install
       run: mvn clean install -B -V
       
-    - name: Upload Test Results
+    - name: Publish Test Results
       uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
@@ -47,14 +47,14 @@ jobs:
           **/target/surefire-reports/
           **/target/failsafe-reports/
           
-    - name: Publish Test Results
-      uses: dorny/test-reporter@v2
-      if: always() && github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-      with:
-        name: Maven Tests (Java ${{ matrix.java-version }})
-        path: '**/target/surefire-reports/TEST-*.xml'
-        reporter: java-junit
-        fail-on-error: true
-        use-actions-summary: true
-        report-title: 'Test Results'
-        badge-title: 'tests'
+    - name: Generate CTRF Report
+      if: ${{ !cancelled() }}
+      run: |
+        # Install github-actions-ctrf
+        npm install -g github-actions-ctrf
+        
+        # Convert Maven Surefire XML to CTRF JSON
+        npx xml2ctrf '**/target/surefire-reports/TEST-*.xml' --output ctrf-report.json
+        
+    - name: Publish Test Summary Results
+      run: npx github-actions-ctrf ctrf/ctrf-report.json

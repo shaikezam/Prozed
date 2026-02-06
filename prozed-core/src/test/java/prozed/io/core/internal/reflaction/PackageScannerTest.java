@@ -11,6 +11,7 @@ import prozed.io.core.server.internal.reflaction.test.AnnotatedClass;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class PackageScannerTest {
@@ -35,6 +36,11 @@ class PackageScannerTest {
 
         // then
         assertEquals(actual, excepted);
+    }
+
+    @Test
+    void test() {
+        assertTrue(false, "Hello World");
     }
 
     @Bean

@@ -22,6 +22,10 @@ public class Node {
         this.paramNode = paramNode;
     }
 
+    public String getPath() {
+        return path;
+    }
+
     public void addHandler(Method method, HttpMethod httpMethod) {
         handlers.put(method, httpMethod);
     }

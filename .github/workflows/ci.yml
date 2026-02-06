@@ -48,5 +48,6 @@ jobs:
       if: always()
       with:
         name: Maven Tests (Java ${{ matrix.java-version }})
-        path: '**/target/surefire-reports/*.xml'
+        path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
+        fail-on-error: true

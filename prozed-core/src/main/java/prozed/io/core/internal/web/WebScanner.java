@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflaction.PackageScanner;
-import prozed.io.core.internal.servlet.HttpMethod;
 import prozed.io.core.internal.servlet.RadixRouter;
 
 import java.io.File;

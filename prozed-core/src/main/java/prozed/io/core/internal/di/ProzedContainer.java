@@ -25,15 +25,9 @@ public final class ProzedContainer {
     private final PackageScanner packageScanner = new PackageScanner();
 
     public ProzedContainer(final String baseApplicationPath) {
-        try {
-            findBeansAndInjectedClasses(baseApplicationPath);
-            validateAllInjectedAreBeans();
-            buildDependencyTree();
-        } catch (Exception e) {
-            beansMapping.clear();
-            injectedClasses.clear();
-            throw new RuntimeException(e);
-        }
+        findBeansAndInjectedClasses(baseApplicationPath);
+        validateAllInjectedAreBeans();
+        buildDependencyTree();
     }
 
     public Object get(Class<?> clazz) {
@@ -41,18 +35,14 @@ public final class ProzedContainer {
     }
 
     private void findBeansAndInjectedClasses(String baseApplicationPath) {
-        try {
-            this.beanedClasses = packageScanner.scan(baseApplicationPath, Bean.class);
-            for (Class<?> clazz : beanedClasses) {
-                Field[] fields = clazz.getDeclaredFields();
-                for (Field field : fields) {
-                    if (field.isAnnotationPresent(Inject.class)) {
-                        injectedClasses.add(field.getType());
-                    }
+        this.beanedClasses = packageScanner.scan(baseApplicationPath, Bean.class);
+        for (Class<?> clazz : beanedClasses) {
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.isAnnotationPresent(Inject.class)) {
+                    injectedClasses.add(field.getType());
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -61,12 +51,18 @@ public final class ProzedContainer {
                 .stream()
                 .filter(c -> !beanedClasses.contains(c))
                 .toList();
-        String errorMessage = "Can't inject [%s}, fields are not marked as @Bean".formatted(notMarkAsBeans);
+        if (notMarkAsBeans.isEmpty()) {
+            return;
+        }
+        String errorMessage = "Can't inject [%s], fields are not marked as @Bean".formatted(notMarkAsBeans);
         logger.error(errorMessage);
         throw new IllegalStateException(errorMessage);
     }
 
     private void buildDependencyTree() {
+        if (beanedClasses.containsAll(injectedClasses) && injectedClasses.containsAll(beanedClasses)) {
+            throw new IllegalStateException("Cycle detected");
+        }
         List<Class<?>> allRootBeans = beanedClasses
                 .stream()
                 .filter(c -> !injectedClasses.contains(c))
@@ -80,7 +76,9 @@ public final class ProzedContainer {
 
     private void buildTree(Class<?> clazz) {
         if (visiting.contains(clazz)) {
-            throw new IllegalStateException("Cycle detected: " + clazz.getName());
+            String errorMessage = "Cycle detected: %s".formatted(clazz.getName());
+            logger.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
         }
         if (processed.contains(clazz)) return;
         visiting.add(clazz);

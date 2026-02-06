@@ -21,7 +21,7 @@ class PackageScannerTest {
     @Test
     void testScan() {
         // given
-        PackageScanner scanner = new PackageScanner();
+        //PackageScanner scanner = new PackageScanner();
         Set<Class<?>> actual = Set.of(
                 FirstAnnotatedClass.class,
                 SecondAnnotatedClass.class,

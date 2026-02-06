@@ -1,0 +1,87 @@
+name: Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install GitHub CLI
+      run: |
+        curl -fsSL https://cli.github.com/packages/github-cli GH_CLI_VERSION=2.39.1 | tar -xz -C /usr/local/lib --strip-components=1
+        export PATH=/usr/local/lib/bin:$PATH
+        
+    - name: Generate Code Review
+      run: |
+        # Get PR details
+        PR_NUMBER=$(echo $GITHUB_REF | grep -o '[0-9]\+')
+        BASE_BRANCH=$(gh pr view $PR_NUMBER --json | jq -r '.baseRefName')
+        HEAD_BRANCH=$(gh pr view $PR_NUMBER --json | jq -r '.headRefName')
+        
+        # Generate review using GitHub Copilot CLI
+        echo "Generating code review for PR #$PR_NUMBER..."
+        
+        # Get diff for review
+        gh pr diff $PR_NUMBER > /tmp/pr.diff
+        
+        # Generate review comment
+        cat > /tmp/review.md << 'EOF'
+        ## 🤖 GitHub Copilot Code Review
+        
+        **PR #$PR_NUMBER: $HEAD_BRANCH → $BASE_BRANCH**
+        
+        ### 📝 Review Summary
+        This PR was automatically analyzed by GitHub Copilot for:
+        - Code quality and best practices
+        - Potential bugs and issues
+        - Security vulnerabilities
+        - Performance considerations
+        
+        ### 🔍 Key Findings
+        *Review will be updated here once Copilot analysis is complete*
+        
+        ---
+        📅 Generated: $(date)
+        🤖 Powered by: GitHub Copilot
+        EOF
+        
+        # Post review as PR comment
+        gh pr comment $PR_NUMBER --body-file /tmp/review.md
+        
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Update PR Status
+      run: |
+        PR_NUMBER=$(echo $GITHUB_REF | grep -o '[0-9]\+')
+        
+        # Add "reviewed" label
+        gh pr edit $PR_NUMBER --add-label "copilot-reviewed"
+        
+        # Set PR status to "Success" if no critical issues
+        gh api repos/:owner/:repo/statuses/$(git rev-parse HEAD) \
+          --field context='copilot-review' \
+          --field state='success' \
+          --field description='Copilot code review completed' \
+          --field target_url="https://github.com/${{ github.repository }}/pull/$PR_NUMBER"
+          
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

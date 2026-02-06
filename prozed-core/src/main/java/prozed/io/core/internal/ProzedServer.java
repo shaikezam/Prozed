@@ -4,7 +4,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
 import prozed.io.core.internal.servlet.DispatcherServlet;
-import prozed.io.core.internal.servlet.WebScanner;
+import prozed.io.core.internal.web.WebScanner;
 import prozed.io.core.internal.servlet.RadixRouter;
 import prozed.io.core.internal.di.ProzedContainer;
 

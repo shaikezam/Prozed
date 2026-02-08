@@ -2,7 +2,7 @@ package prozed.io.core.internal.servlet;
 
 import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
-import prozed.io.core.internal.reflaction.PackageScanner;
+import prozed.io.core.internal.reflection.PackageScanner;
 
 import java.io.File;
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package prozed.io.core.server.internal.reflaction.test;
+package prozed.io.core.internal.reflection.test;
 
 import prozed.io.core.api.di.Bean;
 

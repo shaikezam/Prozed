@@ -1,40 +1,107 @@
 package prozed.io.core.internal.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import prozed.io.core.internal.servlet.RadixRouter;
+
 import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class NodeRouter {
-    private Node root;
+    private final Node root;
+    private static final Logger logger = LoggerFactory.getLogger(NodeRouter.class);
+    private static final Pattern WILDCARD_PATTERN = Pattern.compile("\\{[^}]+}");
 
     public NodeRouter() {
-        this.root = new Node();
+        this.root = new Node("/");
     }
 
-    public void addRoute(String path, Method handler) {
+    public void addRoute(String path, Method handler, HttpMethod method) {
         Node current = root;
-        Optional<String> lcp = findLCP(path, current.getPath());
         String[] segments = path.split("/");
-
-        for (String segment : segments) {
-            if (current.getPath().equals(segment)) {
-                c
+        int currentSegmentIndex = 0;
+        for (; currentSegmentIndex < segments.length; currentSegmentIndex++) {
+            if (segments[currentSegmentIndex].isEmpty()) {
+                continue;
             }
-            if (segment.equals(current.getPath())) {
-
+            Optional<Node> node = findNodeForAddingRoute(current, segments[currentSegmentIndex]);
+            if (node.isPresent()) {
+                current = node.get();
+            } else  { // found node without relevant path
+                break;
             }
         }
+        buildSubTreeForAddingRoute(path, segments, currentSegmentIndex, current, handler, method);
     }
 
-    private Optional<Node> findNode(Node parent, String segment) {
-        if (parent.getPath().equals(segment)) {
-            return Optional.of(parent);
-        }
-        for (Node child : parent.getStaticChildren()) {
-            Optional<Node> result = findNode(child, segment);
-            if (result.isPresent()) {
-                return result;
+    public RadixRouter.Match lookup(String method, String path) {
+        return null;
+    }
+
+    private void buildSubTreeForAddingRoute(
+            String path,
+            String[] segments,
+            int currentSegmentIndex,
+            Node current,
+            Method handler,
+            HttpMethod method) {
+        for (; currentSegmentIndex < segments.length; currentSegmentIndex++) {
+            String segment = segments[currentSegmentIndex];
+
+            if (WILDCARD_PATTERN.matcher(segment).matches()) {
+                Node existingWildcard = current.getWildCardChild();
+                if (existingWildcard != null) {
+                    if (!existingWildcard.getPath().equals(segment)) {
+                        String conflictError = "Ambiguous wildcard route: path '%s' conflicts with existing wildcard '%s' at segment '%s'"
+                                .formatted(path, existingWildcard.getPath(), segment);
+                        logger.error(conflictError);
+                        throw new IllegalStateException(conflictError);
+                    }
+                    current = existingWildcard;
+                }else {
+                    Optional<Node> existingStatic = current.getStaticChild(segment);
+                    if (existingStatic.isPresent()) {
+                        current = existingStatic.get();
+                    } else {
+                        Node node = new Node(segment);
+                        current.addStaticChild(node);
+                        current = node;
+                    }
+                }
+            } else {
+                Node node = new Node(segment);
+                current.addStaticChild(node);
+                current = node;
             }
         }
+        if (current.isHandlerExists(method)) {
+            String errorMessage = "path {%s} with method {%s} already exists"
+                    .formatted(path, method);
+            logger.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+        current.addHandler(method, handler);
+
+    }
+
+    private Optional<Node> findNodeForAddingRoute(Node parent, String segment) {
+        if (parent == null) {
+            return Optional.empty();
+        }
+
+        Optional<Node> staticChild = parent.getStaticChild(segment);
+        if (staticChild.isPresent()) {
+            return staticChild;
+        }
+
+        if (parent.getWildCardChild() != null &&
+                parent.getWildCardChild().getPath().equals(segment)) {
+            return Optional.of(parent.getWildCardChild());
+        }
+
         return Optional.empty();
     }
+
+
 }

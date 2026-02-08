@@ -7,6 +7,7 @@ import prozed.io.core.internal.servlet.DispatcherServlet;
 import prozed.io.core.internal.servlet.WebScanner;
 import prozed.io.core.internal.servlet.RadixRouter;
 import prozed.io.core.internal.di.ProzedContainer;
+import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.Closeable;
 import java.io.File;
@@ -41,9 +42,9 @@ public class ProzedServer implements Closeable {
         tomcat.getConnector();
 
         // InitializFlightContainere the Prozed Engine
-        RadixRouter router = new RadixRouter();
+        NodeRouter nodeRouter = new NodeRouter();
         container = new ProzedContainer(scanPackage);
-        WebScanner scanner = new WebScanner(router, container);
+        WebScanner scanner = new WebScanner(nodeRouter, container);
 
         // Scan the user-provided package
         if (scanPackage != null && !scanPackage.isEmpty()) {
@@ -57,7 +58,7 @@ public class ProzedServer implements Closeable {
         Context ctx = tomcat.addContext(contextPath, fakeDocBase);
 
         // Link the Router to the Dispatcher
-        DispatcherServlet dispatcher = new DispatcherServlet(router);
+        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter);
         Tomcat.addServlet(ctx, "prozedDispatcher", dispatcher);
         ctx.addServletMappingDecoded("/*", "prozedDispatcher");
     }

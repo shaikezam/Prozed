@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.web.Produces;
+import prozed.io.core.internal.web.Node;
+import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -15,10 +17,10 @@ import java.lang.reflect.Method;
  */
 public class DispatcherServlet extends HttpServlet {
 
-    private final RadixRouter router;
+    private final NodeRouter nodeRouter;
 
-    public DispatcherServlet(final RadixRouter router) {
-        this.router = router;
+    public DispatcherServlet(final NodeRouter nodeRouter) {
+        this.nodeRouter = nodeRouter;
     }
 
     /**
@@ -36,7 +38,7 @@ public class DispatcherServlet extends HttpServlet {
         String method = req.getMethod(); // GET, POST, etc.
 
         // 2. Lookup the route in the Radix Tree
-        RadixRouter.Match match = router.lookup(method, path);
+        RadixRouter.Match match = nodeRouter.lookup(method, path);
 
         if (match != null) {
             try {

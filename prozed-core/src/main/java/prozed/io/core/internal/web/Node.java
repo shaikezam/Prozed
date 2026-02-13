@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class Node {
+final public class Node {
     private String path;
     private final Map<String, Node> staticChildren = new HashMap<>();
     private final Map<HttpMethod, Method> handlers = new HashMap<>();
@@ -17,6 +17,10 @@ public class Node {
 
     public String getPath() {
         return path;
+    }
+
+    public Optional<Method> getHandler(HttpMethod method) {
+        return Optional.ofNullable(handlers.get(method));
     }
 
     public Node getWildCardChild() {

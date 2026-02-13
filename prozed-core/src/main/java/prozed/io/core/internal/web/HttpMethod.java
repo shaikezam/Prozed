@@ -11,4 +11,8 @@ public enum HttpMethod {
     HttpMethod(String name) {
         this.name = name;
     }
+
+    public static HttpMethod fromString(String name) {
+        return valueOf(name.toUpperCase());
+    }
 }

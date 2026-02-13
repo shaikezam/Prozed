@@ -5,10 +5,12 @@ import org.slf4j.LoggerFactory;
 import prozed.io.core.internal.servlet.RadixRouter;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-public class NodeRouter {
+final public class NodeRouter {
     private final Node root;
     private static final Logger logger = LoggerFactory.getLogger(NodeRouter.class);
     private static final Pattern WILDCARD_PATTERN = Pattern.compile("\\{[^}]+}");
@@ -28,15 +30,40 @@ public class NodeRouter {
             Optional<Node> node = findNodeForAddingRoute(current, segments[currentSegmentIndex]);
             if (node.isPresent()) {
                 current = node.get();
-            } else  { // found node without relevant path
+            } else { // found node without relevant path
                 break;
             }
         }
         buildSubTreeForAddingRoute(path, segments, currentSegmentIndex, current, handler, method);
     }
 
-    public RadixRouter.Match lookup(String method, String path) {
-        return null;
+    public NodeExecutorWrapper lookup(HttpMethod method, String path, Map<String, String> queryParams) throws HttpException {
+        String[] segments = path.split("/");
+        final Map<String, String> pathParams = new HashMap<>();
+        Node current = root;
+        for (String segment : segments) {
+            Optional<Node> staticChild = current.getStaticChild(segment);
+            if (staticChild.isEmpty()) {
+                Node wildCardChild = current.getWildCardChild();
+                if (wildCardChild == null) {
+                    String errorMessage = "%s path not found".formatted(path);
+                    logger.error(errorMessage);
+                    throw new HttpException(errorMessage, HttpCode.NOT_FOUND);
+                } else {
+                    current = wildCardChild;
+                    pathParams.put(wildCardChild.getPath(), segment);
+                }
+            } else {
+                current = staticChild.get();
+            }
+        }
+        Optional<Method> handler = current.getHandler(method);
+        if (handler.isEmpty()) {
+            String errorMessage = "%s method not found for path %s".formatted(method, path);
+            logger.error(errorMessage);
+            throw new HttpException(errorMessage, HttpCode.NOT_SUPPORTED);
+        }
+        return new NodeExecutorWrapper(pathParams, queryParams, handler.get());
     }
 
     private void buildSubTreeForAddingRoute(
@@ -59,13 +86,13 @@ public class NodeRouter {
                         throw new IllegalStateException(conflictError);
                     }
                     current = existingWildcard;
-                }else {
+                } else {
                     Optional<Node> existingStatic = current.getStaticChild(segment);
                     if (existingStatic.isPresent()) {
                         current = existingStatic.get();
                     } else {
                         Node node = new Node(segment);
-                        current.addStaticChild(node);
+                        current.setWildCardChild(node);
                         current = node;
                     }
                 }

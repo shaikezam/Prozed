@@ -4,11 +4,15 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.web.Produces;
+import prozed.io.core.internal.web.HttpMethod;
 import prozed.io.core.internal.web.Node;
+import prozed.io.core.internal.web.NodeExecutorWrapper;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Front Controller for the Prozed framework.
@@ -36,9 +40,22 @@ public class DispatcherServlet extends HttpServlet {
         }
 
         String method = req.getMethod(); // GET, POST, etc.
+        Map<String, String[]> queryParamsArray = req.getParameterMap();
+        Map<String, String> queryParams = new HashMap<>();
+
+        for (Map.Entry<String, String[]> entry : queryParamsArray.entrySet()) {
+            String key = entry.getKey();
+            String[] values = entry.getValue();
+
+            // Take first value (most common case)
+            String value = values.length > 0 ? values[0] : "";
+            queryParams.put(key, value);
+        }
+
 
         // 2. Lookup the route in the Radix Tree
-        RadixRouter.Match match = nodeRouter.lookup(method, path);
+        // TODO normalize path
+        NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(HttpMethod.fromString(method), path, queryParams);
 
         if (match != null) {
             try {

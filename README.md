@@ -1,6 +1,8 @@
 ![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9-red?logo=apache-maven&logoColor=white)
-![CI](https://github.com/shaikezam/prozed/workflows/CI/badge.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
+![CI](https://github.com/shaikezam/Prozed/workflows/CI/badge.svg)
 
 # Prozed Framework
 

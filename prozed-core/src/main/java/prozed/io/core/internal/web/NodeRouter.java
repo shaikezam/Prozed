@@ -2,9 +2,12 @@ package prozed.io.core.internal.web;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prozed.io.core.internal.servlet.RadixRouter;
+import prozed.io.core.api.web.HttpCode;
+import prozed.io.core.api.web.HttpMethod;
+import prozed.io.core.api.web.PayloadParam;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +23,7 @@ final public class NodeRouter {
     }
 
     public void addRoute(String path, Method handler, HttpMethod method) {
+        validatePayloadParamCount(handler);
         Node current = root;
         String[] segments = path.split("/");
         int currentSegmentIndex = 0;
@@ -130,5 +134,20 @@ final public class NodeRouter {
         return Optional.empty();
     }
 
+    private void validatePayloadParamCount(Method method) {
+        int payloadParamCount = 0;
+        for (Parameter parameter : method.getParameters()) {
+            if (parameter.getAnnotation(PayloadParam.class) != null) {
+                payloadParamCount++;
+            }
+        }
 
+        if (payloadParamCount > 1) {
+            String errorMessage = "Method %s.%s has %d @PayloadParam annotations. Only one is allowed per method."
+                    .formatted(method.getDeclaringClass().getSimpleName(), method.getName(), payloadParamCount);
+            logger.error(errorMessage);
+            throw new IllegalStateException(errorMessage);
+        }
+
+    }
 }

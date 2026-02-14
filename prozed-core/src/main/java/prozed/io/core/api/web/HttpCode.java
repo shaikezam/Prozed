@@ -1,4 +1,6 @@
-package prozed.io.core.internal.web;
+package prozed.io.core.api.web;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public enum HttpCode {
     NOT_FOUND(404),
@@ -12,4 +14,9 @@ public enum HttpCode {
     HttpCode(int code) {
         this.code = code;
     }
+
+    public void applyTo(HttpServletResponse response) {
+        response.setStatus(this.code);
+    }
+
 }

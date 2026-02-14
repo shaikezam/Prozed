@@ -1,4 +1,4 @@
-package prozed.io.core.internal.web;
+package prozed.io.core.api.web;
 
 public enum HttpMethod {
     GET("GET"),

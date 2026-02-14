@@ -1,5 +1,7 @@
 package prozed.io.core.internal.web;
 
+import prozed.io.core.api.web.HttpMethod;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;

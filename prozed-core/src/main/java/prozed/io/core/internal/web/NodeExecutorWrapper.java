@@ -1,11 +1,13 @@
 package prozed.io.core.internal.web;
 
+import com.google.gson.Gson;
+import prozed.io.core.api.web.HttpCode;
 import prozed.io.core.api.web.PathParam;
+import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.HashMap;
 import java.util.Map;
 
 public record NodeExecutorWrapper(
@@ -13,7 +15,7 @@ public record NodeExecutorWrapper(
         Map<String, String> queryParams,
         Method method
 ) {
-    public Object execute(Object controller) throws Exception {
+    public Object execute(Object controller, String payload, Gson gson) throws Exception {
         // Build arguments array in the correct order
         Object[] args = new Object[method.getParameterCount()];
 
@@ -39,14 +41,17 @@ public record NodeExecutorWrapper(
                 continue;
             }
 
-            // Handle parameters without annotations (could be entire maps)
-            if (parameter.getType() == Map.class) {
-                // You might want to handle this case differently
-                args[i] = pathParams; // or queryParams, depending on your design
+            PayloadParam payloadParam = parameter.getAnnotation(PayloadParam.class);
+            if (payloadParam != null) {
+                try {
+                    Class<?> payloadType = parameter.getType();
+                    args[i] = gson.fromJson(payload, payloadType);
+                } catch (Exception e) {
+                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam.name()), HttpCode.BAD_REQUEST, e);
+                }
             }
         }
 
-        // Now invoke with the correctly ordered arguments
-        return method.invoke(controller, args);
+        return method.invoke(method.getDeclaringClass(), args);
     }
 }

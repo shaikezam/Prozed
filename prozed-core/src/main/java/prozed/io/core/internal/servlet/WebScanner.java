@@ -3,7 +3,7 @@ package prozed.io.core.internal.servlet;
 import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflection.PackageScanner;
-import prozed.io.core.internal.web.HttpMethod;
+import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.File;
@@ -15,12 +15,10 @@ import java.util.Set;
 
 public class WebScanner {
     private final NodeRouter nodeRouter;
-    private final ProzedContainer container;
     private final PackageScanner packageScanner = new PackageScanner();
 
-    public WebScanner(NodeRouter nodeRouter, ProzedContainer container) {
+    public WebScanner(NodeRouter nodeRouter) {
         this.nodeRouter = nodeRouter;
-        this.container = container;
     }
 
     /**
@@ -73,27 +71,5 @@ public class WebScanner {
         // Ensures result always starts with / and has no double slashes
         String combined = "/" + base + "/" + sub;
         return combined.replaceAll("/{2,}", "/");
-    }
-
-    /**
-     * Simplified class discovery logic for local development.
-     */
-    private List<Class<?>> findClasses(String packageName) throws Exception {
-        List<Class<?>> classes = new ArrayList<>();
-        String path = packageName.replace('.', '/');
-        URL resource = Thread.currentThread().getContextClassLoader().getResource(path);
-
-        if (resource == null) return classes;
-
-        File directory = new File(resource.getFile());
-        if (directory.exists()) {
-            for (File file : directory.listFiles()) {
-                if (file.getName().endsWith(".class")) {
-                    String className = packageName + "." + file.getName().replace(".class", "");
-                    classes.add(Class.forName(className));
-                }
-            }
-        }
-        return classes;
     }
 }

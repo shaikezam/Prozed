@@ -1,18 +1,22 @@
 package prozed.io.core.internal.servlet;
 
+import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import prozed.io.core.api.web.Produces;
-import prozed.io.core.internal.web.HttpMethod;
-import prozed.io.core.internal.web.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import prozed.io.core.api.web.ContentType;
+import prozed.io.core.api.web.HttpMethod;
+import prozed.io.core.internal.di.ProzedContainer;
+import prozed.io.core.internal.web.HttpException;
 import prozed.io.core.internal.web.NodeExecutorWrapper;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The Front Controller for the Prozed framework.
@@ -22,15 +26,18 @@ import java.util.Map;
 public class DispatcherServlet extends HttpServlet {
 
     private final NodeRouter nodeRouter;
+    private final ProzedContainer prozedContainer;
+    private final Gson gson = new Gson();
+    private final Logger logger = LoggerFactory.getLogger(DispatcherServlet.class);
 
-    public DispatcherServlet(final NodeRouter nodeRouter) {
+    public DispatcherServlet(
+            final NodeRouter nodeRouter,
+            final ProzedContainer prozedContainer
+    ) {
         this.nodeRouter = nodeRouter;
+        this.prozedContainer = prozedContainer;
     }
 
-    /**
-     * Overriding service() allows us to handle all HTTP methods (GET, POST, PUT, DELETE)
-     * through a single routing entry point.
-     */
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         // 1. Normalize the path from Tomcat
@@ -52,51 +59,29 @@ public class DispatcherServlet extends HttpServlet {
             queryParams.put(key, value);
         }
 
-
         // 2. Lookup the route in the Radix Tree
         // TODO normalize path
         NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(HttpMethod.fromString(method), path, queryParams);
-
-        if (match != null) {
-            try {
-                // 3. Handle Content-Type via @Produces annotation
-                Method targetMethod = match.target().method();
-                if (targetMethod.isAnnotationPresent(Produces.class)) {
-                    resp.setContentType(targetMethod.getAnnotation(Produces.class).value());
-                } else {
-                    resp.setContentType("application/json"); // Default for Prozed
-                }
-                resp.setCharacterEncoding("UTF-8");
-
-                // 4. Invoke the method with Parameters if needed
-                Object result;
-                if (targetMethod.getParameterCount() > 0) {
-                    // We pass the params map (e.g., {"id": "123"}) extracted by the RadixRouter
-                    result = targetMethod.invoke(match.target().controller(), match.params());
-                } else {
-                    result = targetMethod.invoke(match.target().controller());
-                }
-
-                // 5. Write the response
-                if (result != null) {
-                    resp.getWriter().write(result.toString());
-                }
-
-            } catch (Exception e) {
-                // Get the actual exception thrown by the controller
-                Throwable cause = (e.getCause() != null) ? e.getCause() : e;
-                System.err.println("Prozed Execution Error on " + method + " " + path);
-                cause.printStackTrace();
-
-                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                resp.getWriter().write("{\"error\": \"Internal Server Error\", \"detail\": \"" + cause.getMessage() + "\"}");
+        try {
+            Object controller = this.prozedContainer.get(nodeExecutorWrapper.method().getDeclaringClass());
+            Object result = nodeExecutorWrapper.execute(
+                    controller,
+                    req.getReader().lines().collect(Collectors.joining(System.lineSeparator())),
+                    this.gson);
+            resp.setContentType(ContentType.APPLICATION_JSON.name());
+            if (result != null) {
+                resp.getWriter().write(gson.toJson(result));
             }
-        } else {
-            // 6. 404 Handling with Debugging info
-            System.out.println("Prozed 404: No match for [" + method + "] " + path);
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"error\": \"Not Found\", \"path\": \"" + path + "\", \"method\": \"" + method + "\"}");
+        } catch (Exception e) {
+            logger.error("Exception while dispatching request", e);
+            if (e instanceof HttpException exception) {
+                exception.getHttpCode().applyTo(resp);
+                resp.getWriter().write("""
+                                {"error": "%s"}
+                        """.formatted(e.getMessage()));
+            } else {
+                resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
         }
     }
 }

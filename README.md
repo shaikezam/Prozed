@@ -23,6 +23,15 @@ ProzedServer.builder()
 Create REST endpoints with simple annotations:
 
 ```java
+import prozed.io.core.api.di.Bean;
+import prozed.io.core.api.di.Inject;
+import prozed.io.core.api.web.Controller;
+import prozed.io.core.api.web.GetRequest;
+import prozed.io.core.api.web.PostRequest;
+import prozed.io.core.api.web.PathParam;
+import prozed.io.core.api.web.PayloadParam;
+import prozed.io.core.api.web.QueryParam;
+
 @Bean
 @Controller("/api/users")
 public class UserController {
@@ -52,6 +61,9 @@ public class UserController {
 Create business logic services with @Bean:
 
 ```java
+import prozed.io.core.api.di.Bean;
+import prozed.io.core.api.di.Inject;
+
 @Bean
 public class UserService {
     

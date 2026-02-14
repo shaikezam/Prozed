@@ -80,6 +80,15 @@ class NodeRouterTest {
         assertNotNull(root);
     }
 
+    @Test
+    void testLookupNotFound() {
+        // given
+
+        // when
+
+        // then
+    }
+
     public void twoPayloadParamsMethod(@PayloadParam("someParam") String param1, @PayloadParam("someParam2") String param2) {
 
     }

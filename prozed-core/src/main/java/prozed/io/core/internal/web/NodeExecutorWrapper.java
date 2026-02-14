@@ -26,7 +26,7 @@ public record NodeExecutorWrapper(
             // Handle @PathParam
             PathParam pathParam = parameter.getAnnotation(PathParam.class);
             if (pathParam != null) {
-                String paramName = pathParam.name();
+                String paramName = pathParam.value();
                 String value = pathParams.get(paramName);
                 args[i] = value;
                 continue;

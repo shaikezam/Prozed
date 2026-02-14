@@ -1,16 +1,11 @@
 package prozed.io.core.internal.servlet;
 
 import prozed.io.core.api.web.*;
-import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflection.PackageScanner;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.internal.web.NodeRouter;
 
-import java.io.File;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 public class WebScanner {
@@ -46,16 +41,16 @@ public class WebScanner {
         HttpMethod httpMethod = null;
 
         if (method.isAnnotationPresent(GetRequest.class)) {
-            subPath = method.getAnnotation(GetRequest.class).path();
+            subPath = method.getAnnotation(GetRequest.class).value();
             httpMethod = HttpMethod.GET;
         } else if (method.isAnnotationPresent(PostRequest.class)) {
-            subPath = method.getAnnotation(PostRequest.class).path();
+            subPath = method.getAnnotation(PostRequest.class).value();
             httpMethod = HttpMethod.POST;
         } else if (method.isAnnotationPresent(PutRequest.class)) {
-            subPath = method.getAnnotation(PutRequest.class).path();
+            subPath = method.getAnnotation(PutRequest.class).value();
             httpMethod = HttpMethod.PUT;
         } else if (method.isAnnotationPresent(DeleteRequest.class)) {
-            subPath = method.getAnnotation(DeleteRequest.class).path();
+            subPath = method.getAnnotation(DeleteRequest.class).value();
             httpMethod = HttpMethod.DELETE;
         }
 

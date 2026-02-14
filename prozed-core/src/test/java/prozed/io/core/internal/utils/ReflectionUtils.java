@@ -1,5 +1,6 @@
 package prozed.io.core.internal.utils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public class ReflectionUtils {
@@ -7,6 +8,16 @@ public class ReflectionUtils {
         try {
             return clazz.getMethod(name, paramTypes);
         } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Object getField(Object object, String fieldName) {
+        try {
+            Field field = object.getClass().getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field.get(object);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

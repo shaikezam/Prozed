@@ -1,4 +1,4 @@
-package prozed.io.core.internal.servlet;
+package prozed.io.core.api.web;
 
 public enum HttpMethod {
     GET("GET"),
@@ -10,5 +10,9 @@ public enum HttpMethod {
 
     HttpMethod(String name) {
         this.name = name;
+    }
+
+    public static HttpMethod fromString(String name) {
+        return valueOf(name.toUpperCase());
     }
 }

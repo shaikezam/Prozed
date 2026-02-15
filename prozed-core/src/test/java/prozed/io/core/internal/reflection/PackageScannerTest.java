@@ -1,12 +1,12 @@
-package prozed.io.core.server.internal.reflaction;
+package prozed.io.core.internal.reflection;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import prozed.io.core.api.di.Bean;
-import prozed.io.core.internal.reflaction.PackageScanner;
-import prozed.io.core.server.internal.reflaction.test.AnnotatedClass;
+import prozed.io.core.internal.reflection.PackageScanner;
+import prozed.io.core.internal.reflection.test.AnnotatedClass;
 
 import java.util.Set;
 
@@ -21,7 +21,6 @@ class PackageScannerTest {
     @Test
     void testScan() {
         // given
-        //PackageScanner scanner = new PackageScanner();
         Set<Class<?>> actual = Set.of(
                 FirstAnnotatedClass.class,
                 SecondAnnotatedClass.class,
@@ -30,7 +29,7 @@ class PackageScannerTest {
 
         // when
         Set<Class<?>> excepted = scanner.scan(
-                "prozed.io.core.server.internal.reflaction",
+                "prozed.io.core.internal.reflection",
                 Bean.class);
 
         // then

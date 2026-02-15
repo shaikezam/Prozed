@@ -1,4 +1,4 @@
-package prozed.io.core.internal.reflaction;
+package prozed.io.core.internal.reflection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

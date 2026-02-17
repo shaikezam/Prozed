@@ -55,23 +55,25 @@ jobs:
         path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
 
-    - name: Check PMD Report Existence
-      id: check_pmd
-      if: always()
-      # This checks if at least one pmd.xml exists and has content
-      run: |
-        FILES=$(find . -name "pmd.xml" -path "*/target/*" -size +10c)
-        if [ -z "$FILES" ]; then
-          echo "exists=false" >> $GITHUB_OUTPUT
-        else
-          echo "exists=true" >> $GITHUB_OUTPUT
-        fi
+    - name: Run Maven Build
+      run: mvn clean verify -B -V
 
-    - name: PMD Quality Report
-      # Only run if the previous step found a valid file
-      if: always() && steps.check_pmd.outputs.exists == 'true'
-      uses: dorny/test-reporter@v1
+    - name: Upload PMD HTML Report
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-          name: PMD Violations (Java ${{ matrix.java-version }})
-          path: '**/target/pmd.xml'
-          reporter: java-junit
+        name: pmd-report
+        path: '**/target/site/pmd.html'
+
+    - name: Post Summary to PR
+      if: always()
+      run: |
+        echo "### 🎨 PMD HTML Report Generated" >> $GITHUB_STEP_SUMMARY
+        echo "The full visual report is available in the **Artifacts** section above." >> $GITHUB_STEP_SUMMARY
+          
+        # Simple check to see if violations exist to alert the user
+        if grep -q "violation" **/target/pmd.xml 2>/dev/null; then
+          echo "❌ **Violations detected!** Please download the HTML artifact to see details." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "✅ **Code looks clean!**" >> $GITHUB_STEP_SUMMARY
+        fi

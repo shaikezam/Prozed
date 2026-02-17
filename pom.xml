@@ -27,7 +27,7 @@
         <mockito.version>5.21.0</mockito.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
-        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <spotbugs-maven-plugin.version>4.9.8.2</spotbugs-maven-plugin.version>
     </properties>
 
     <modules>
@@ -97,23 +97,9 @@
                             <ruleset>/category/java/bestpractices.xml</ruleset>
                             <ruleset>/category/java/codestyle.xml</ruleset>
                             <ruleset>/category/java/errorprone.xml</ruleset>
+                            <ruleset>/category/java/design.xml</ruleset>
+                            <ruleset>/category/java/multithreading.xml</ruleset>
                         </rulesets>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${maven-checkstyle-plugin.version}</version>
-                    <configuration>
-                        <configLocation>src/main/resources/checkstyle.xml</configLocation>
-                        <failOnViolation>false</failOnViolation>
                     </configuration>
                     <executions>
                         <execution>

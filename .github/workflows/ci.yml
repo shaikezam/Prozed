@@ -55,34 +55,12 @@ jobs:
         path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
 
-    - name: Generate PMD Summary
-      if: always()
-      run: |
-        echo "### 🔍 PMD Analysis Results" >> $GITHUB_STEP_SUMMARY
-        
-        # Find all pmd.xml files in any submodule
-        REPORT_FILES=$(find . -name "pmd.xml" -path "*/target/*")
-        
-        if [ -z "$REPORT_FILES" ]; then
-          echo "⚠️ No PMD reports found. Check if the pmd-plugin is running in your Maven build." >> $GITHUB_STEP_SUMMARY
-        else
-          TOTAL_VIOLATIONS=0
-        
-          # Loop through found reports and count violations
-          for file in $REPORT_FILES; do
-            COUNT=$(grep -c "<violation" "$file" || echo "0")
-            TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + COUNT))
-        
-            if [ "$COUNT" -gt "0" ]; then
-              MODULE_NAME=$(echo "$file" | cut -d'/' -f2)
-              echo "* **$MODULE_NAME**: $COUNT violations" >> $GITHUB_STEP_SUMMARY
-            fi
-          done
-
-          if [ "$TOTAL_VIOLATIONS" -gt "0" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "❌ **Total Violations: $TOTAL_VIOLATIONS**" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ No PMD violations found in any module!" >> $GITHUB_STEP_SUMMARY
-          fi
-        fi
+    - name: PMD Quality Report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        # This creates a NEW row in the Checks list
+        name: PMD Violations (Java ${{ matrix.java-version }})
+        # Path to the JUnit-formatted PMD report
+        path: '**/target/pmd.xml'
+        reporter: java-junit

@@ -3,6 +3,7 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 ![CI](https://github.com/shaikezam/Prozed/workflows/CI/badge.svg)
+[![PMD Status](https://img.shields.io/github/actions/workflow/status/shaikezam/prozed/YOUR_WORKFLOW.yml?label=PMD&logo=java)](https://github.com/shaikezam/prozed/actions)
 
 # Prozed Framework
 

@@ -54,3 +54,20 @@ jobs:
         name: Maven Tests (Java ${{ matrix.java-version }})
         path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
+
+    - name: Generate PMD Summary
+      if: always()
+      run: |
+        echo "### 🔍 PMD Analysis Results" >> $GITHUB_STEP_SUMMARY
+        if [ -f target/pmd.xml ]; then
+          # Extract the number of violations using grep/wc
+          VIOLATIONS=$(grep -c "<violation" **/target/pmd.xml || echo "0")
+          if [ "$VIOLATIONS" -gt "0" ]; then
+            echo "❌ Found **$VIOLATIONS** code style violations." >> $GITHUB_STEP_SUMMARY
+            echo "Check the build logs or artifacts for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No PMD violations found!" >> $GITHUB_STEP_SUMMARY
+          fi
+        else
+          echo "⚠️ No PMD report found." >> $GITHUB_STEP_SUMMARY
+        fi

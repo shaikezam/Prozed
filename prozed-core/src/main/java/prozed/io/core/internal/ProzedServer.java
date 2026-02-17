@@ -11,7 +11,7 @@ import prozed.io.core.internal.web.NodeRouter;
 import java.io.Closeable;
 import java.io.File;
 
-public class ProzedServer implements Closeable {
+final public class ProzedServer implements Closeable {
     private final Tomcat tomcat;
     private final int port;
     private final String contextPath;
@@ -22,7 +22,7 @@ public class ProzedServer implements Closeable {
         return container;
     }
 
-    private ProzedServer(Builder builder) {
+    private ProzedServer(final Builder builder) {
         this.port = builder.port;
         this.contextPath = builder.contextPath;
         this.scanPackage = builder.scanPackage;
@@ -34,16 +34,16 @@ public class ProzedServer implements Closeable {
         tomcat.setPort(port);
 
         // Isolate Tomcat metadata to system temp
-        String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + port).getAbsolutePath();
+        final String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + port).getAbsolutePath();
         tomcat.setBaseDir(baseDir);
 
         // MUST trigger connector before start()
         tomcat.getConnector();
 
         // InitializFlightContainere the Prozed Engine
-        NodeRouter nodeRouter = new NodeRouter();
+        final NodeRouter nodeRouter = new NodeRouter();
         container = new ProzedContainer(scanPackage);
-        WebScanner scanner = new WebScanner(nodeRouter);
+        final WebScanner scanner = new WebScanner(nodeRouter);
 
         // Scan the user-provided package
         if (scanPackage != null && !scanPackage.isEmpty()) {
@@ -51,13 +51,13 @@ public class ProzedServer implements Closeable {
         }
 
         // Setup Tomcat Context
-        String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();
+        final String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();
         new File(fakeDocBase).mkdirs();
 
-        Context ctx = tomcat.addContext(contextPath, fakeDocBase);
+        final Context ctx = tomcat.addContext(contextPath, fakeDocBase);
 
         // Link the Router to the Dispatcher
-        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, container);
+        final DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, container);
         Tomcat.addServlet(ctx, "prozedDispatcher", dispatcher);
         ctx.addServletMappingDecoded("/*", "prozedDispatcher");
     }

@@ -1,5 +1,7 @@
 package prozed.io.core.api.web;
 
+import java.util.Locale;
+
 public enum HttpMethod {
     GET("GET"),
     POST("POST"),
@@ -8,11 +10,18 @@ public enum HttpMethod {
 
     private final String name;
 
-    HttpMethod(String name) {
+    HttpMethod(final String name) {
         this.name = name;
     }
 
-    public static HttpMethod fromString(String name) {
-        return valueOf(name.toUpperCase());
+    public static HttpMethod fromString(final String name) {
+        return valueOf(name.toUpperCase(Locale.ROOT));
+    }
+
+    @Override
+    public String toString() {
+        return "HttpMethod{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }

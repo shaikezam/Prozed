@@ -90,7 +90,7 @@
                     <configuration>
                         <failOnViolation>false</failOnViolation>
                         <printFailingErrors>true</printFailingErrors>
-                        <format>html</format>
+                        <format>net.sourceforge.pmd.renderers.JUnitRenderer</format>
                         <rulesets>
                             <ruleset>/category/java/bestpractices.xml</ruleset>
                             <ruleset>/category/java/codestyle.xml</ruleset>

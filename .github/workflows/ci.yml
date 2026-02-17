@@ -62,15 +62,11 @@ jobs:
         name: pmd-report
         path: '**/target/reports/pmd.html'
 
-    - name: Post Summary to PR
+    - name: PMD Static Analysis Report
+      uses: dorny/test-reporter@v1
       if: always()
-      run: |
-        echo "### 🎨 PMD HTML Report Generated" >> $GITHUB_STEP_SUMMARY
-        echo "The full visual report is available in the **Artifacts** section above." >> $GITHUB_STEP_SUMMARY
-          
-        # Simple check to see if violations exist to alert the user
-        if grep -q "violation" **/target/pmd.xml 2>/dev/null; then
-          echo "❌ **Violations detected!** Please download the HTML artifact to see details." >> $GITHUB_STEP_SUMMARY
-        else
-          echo "✅ **Code looks clean!**" >> $GITHUB_STEP_SUMMARY
-        fi
+      with:
+        # This name creates the new row in your screenshot
+        name: PMD Static Analysis (Java ${{ matrix.java-version }})
+        path: '**/target/pmd.xml'
+        reporter: java-junit

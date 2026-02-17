@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public enum HttpCode {
     NOT_FOUND(404),
+    @SuppressWarnings("PMD.LongVariable")
     INTERNAL_SERVER_ERROR(500),
     BAD_REQUEST(400),
     UNAUTHORIZED(401),

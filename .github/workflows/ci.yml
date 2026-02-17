@@ -59,8 +59,3 @@ jobs:
       uses: jwgmeligmeyling/pmd-github-action@master
       with:
         path: '**/pmd.xml'
-
-    - name: Build with Maven
-      uses: jwgmeligmeyling/checkstyle-github-action@master
-      with:
-        path: '**/checkstyle-result.xml'

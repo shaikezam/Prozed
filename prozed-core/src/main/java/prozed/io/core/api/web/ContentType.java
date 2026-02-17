@@ -5,7 +5,7 @@ public enum ContentType {
 
     private final String name;
 
-    ContentType(String name) {
+    ContentType(final String name) {
         this.name = name;
     }
 }

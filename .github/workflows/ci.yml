@@ -55,18 +55,8 @@ jobs:
         path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
 
-    - name: Upload PMD HTML Report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: pmd-report
-        path: '**/target/reports/pmd.html'
-
-    - name: PMD Static Analysis Report
-      uses: dorny/test-reporter@v1
-      if: always()
-      with:
-        # This name creates the new row in your screenshot
-        name: PMD Static Analysis (Java ${{ matrix.java-version }})
-        path: '**/target/pmd.xml'
-        reporter: java-junit
+    - name: Build with Maven
+      run: mvn -B verify pmd:pmd
+        - uses: lcollins/pmd-github-action@v3.1.0
+        with:
+          path: '**/pmd.xml'

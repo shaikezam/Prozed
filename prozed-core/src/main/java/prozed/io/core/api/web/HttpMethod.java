@@ -20,8 +20,6 @@ public enum HttpMethod {
 
     @Override
     public String toString() {
-        return "HttpMethod{" +
-                "name='" + name + '\'' +
-                '}';
+        return name;
     }
 }

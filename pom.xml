@@ -27,6 +27,7 @@
         <mockito.version>5.21.0</mockito.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     </properties>
 
     <modules>
@@ -105,6 +106,14 @@
                             </goals>
                         </execution>
                     </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${maven-checkstyle-plugin.version}</version>
+                    <configuration>
+                        <failsOnError>false</failsOnError>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

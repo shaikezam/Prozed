@@ -89,7 +89,8 @@
                     <artifactId>maven-pmd-plugin</artifactId>
                     <version>${maven-pmd-plugin.version}</version>
                     <configuration>
-<!--                        <failOnViolation>false</failOnViolation>-->
+                        <failOnViolation>true</failOnViolation>
+                        <failurePriority>5</failurePriority>
                         <printFailingErrors>true</printFailingErrors>
                         <includeTests>true</includeTests>
                         <format>xml</format>

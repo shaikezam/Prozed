@@ -59,15 +59,30 @@ jobs:
       if: always()
       run: |
         echo "### 🔍 PMD Analysis Results" >> $GITHUB_STEP_SUMMARY
-        if [ -f target/pmd.xml ]; then
-          # Extract the number of violations using grep/wc
-          VIOLATIONS=$(grep -c "<violation" **/target/pmd.xml || echo "0")
-          if [ "$VIOLATIONS" -gt "0" ]; then
-            echo "❌ Found **$VIOLATIONS** code style violations." >> $GITHUB_STEP_SUMMARY
-            echo "Check the build logs or artifacts for details." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "✅ No PMD violations found!" >> $GITHUB_STEP_SUMMARY
-          fi
+        
+        # Find all pmd.xml files in any submodule
+        REPORT_FILES=$(find . -name "pmd.xml" -path "*/target/*")
+        
+        if [ -z "$REPORT_FILES" ]; then
+          echo "⚠️ No PMD reports found. Check if the pmd-plugin is running in your Maven build." >> $GITHUB_STEP_SUMMARY
         else
-          echo "⚠️ No PMD report found." >> $GITHUB_STEP_SUMMARY
+          TOTAL_VIOLATIONS=0
+        
+          # Loop through found reports and count violations
+          for file in $REPORT_FILES; do
+            COUNT=$(grep -c "<violation" "$file" || echo "0")
+            TOTAL_VIOLATIONS=$((TOTAL_VIOLATIONS + COUNT))
+        
+            if [ "$COUNT" -gt "0" ]; then
+              MODULE_NAME=$(echo "$file" | cut -d'/' -f2)
+              echo "* **$MODULE_NAME**: $COUNT violations" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          if [ "$TOTAL_VIOLATIONS" -gt "0" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Total Violations: $TOTAL_VIOLATIONS**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No PMD violations found in any module!" >> $GITHUB_STEP_SUMMARY
+          fi
         fi

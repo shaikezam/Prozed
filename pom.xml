@@ -90,7 +90,7 @@
                     <configuration>
                         <failOnViolation>false</failOnViolation>
                         <printFailingErrors>true</printFailingErrors>
-                        <format>xml</format>
+                        <format>junit</format>
                         <rulesets>
                             <ruleset>/category/java/bestpractices.xml</ruleset>
                             <ruleset>/category/java/codestyle.xml</ruleset>

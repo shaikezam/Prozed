@@ -12,11 +12,11 @@ public enum HttpCode {
     NOT_SUPPORTED(405);
     private final int code;
 
-    HttpCode(int code) {
+    HttpCode(final int code) {
         this.code = code;
     }
 
-    public void applyTo(HttpServletResponse response) {
+    public void applyTo(final HttpServletResponse response) {
         response.setStatus(this.code);
     }
 

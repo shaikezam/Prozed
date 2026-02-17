@@ -91,7 +91,6 @@
                         <failOnViolation>false</failOnViolation>
                         <printFailingErrors>true</printFailingErrors>
                         <format>html</format>
-                        <aggregate>true</aggregate>
                         <rulesets>
                             <ruleset>/category/java/bestpractices.xml</ruleset>
                             <ruleset>/category/java/codestyle.xml</ruleset>
@@ -100,10 +99,8 @@
                     </configuration>
                     <executions>
                         <execution>
-                            <id>pmd-report</id>
-                            <phase>verify</phase>
                             <goals>
-                                <goal>pmd</goal>
+                                <goal>check</goal>
                             </goals>
                         </execution>
                     </executions>

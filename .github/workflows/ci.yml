@@ -55,15 +55,12 @@ jobs:
         path: '**/target/surefire-reports/TEST-*.xml'
         reporter: java-junit
 
-    - name: Run Maven Build
-      run: mvn clean verify -B -V
-
     - name: Upload PMD HTML Report
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: pmd-report
-        path: '**/target/site/pmd.html'
+        path: '**/target/reports/pmd.html'
 
     - name: Post Summary to PR
       if: always()

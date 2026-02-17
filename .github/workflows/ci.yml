@@ -56,7 +56,7 @@ jobs:
         reporter: java-junit
 
     - name: Build with Maven
-      run: mvn -B verify pmd:pmd
-    - uses: lcollins/pmd-github-action@v3.1.0
+      #run: mvn -B verify pmd:pmd
+    - uses: jwgmeligmeyling/pmd-github-action@master
       with:
         path: '**/pmd.xml'

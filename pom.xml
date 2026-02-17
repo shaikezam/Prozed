@@ -112,10 +112,8 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${maven-checkstyle-plugin.version}</version>
                     <configuration>
+                        <configLocation>src/main/resources/checkstyle.xml</configLocation>
                         <failOnViolation>false</failOnViolation>
-                        <printFailingErrors>true</printFailingErrors>
-                        <includeTests>true</includeTests>
-                        <format>xml</format>
                     </configuration>
                     <executions>
                         <execution>

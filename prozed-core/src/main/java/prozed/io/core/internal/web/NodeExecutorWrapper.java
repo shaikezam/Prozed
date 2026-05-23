@@ -5,6 +5,7 @@ import prozed.io.core.api.web.HttpCode;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
+import prozed.io.core.internal.reflection.TypeConvertor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -26,8 +27,7 @@ public record NodeExecutorWrapper(
             // Handle @PathParam
             PathParam pathParam = parameter.getAnnotation(PathParam.class);
             if (pathParam != null) {
-                String paramName = pathParam.value();
-                String value = pathParams.get(paramName);
+                Object value = TypeConvertor.convert(pathParams.get(pathParam.value()), parameter.getType());
                 args[i] = value;
                 continue;
             }
@@ -35,8 +35,7 @@ public record NodeExecutorWrapper(
             // Handle @QueryParam
             QueryParam queryParam = parameter.getAnnotation(QueryParam.class);
             if (queryParam != null) {
-                String paramName = queryParam.name();
-                String value = queryParams.get(paramName);
+                Object value = TypeConvertor.convert(queryParams.get(queryParam.value()), parameter.getType());
                 args[i] = value;
                 continue;
             }
@@ -52,6 +51,6 @@ public record NodeExecutorWrapper(
             }
         }
 
-        return method.invoke(method.getDeclaringClass(), args);
+        return method.invoke(controller, args);
     }
 }

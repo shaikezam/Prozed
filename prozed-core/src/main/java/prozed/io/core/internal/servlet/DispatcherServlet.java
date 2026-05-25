@@ -16,7 +16,9 @@ import prozed.io.core.internal.web.NodeRouter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * The Front Controller for the Prozed framework.
@@ -47,22 +49,12 @@ public class DispatcherServlet extends HttpServlet {
         }
 
         String method = req.getMethod(); // GET, POST, etc.
-        Map<String, String[]> queryParamsArray = req.getParameterMap();
-        Map<String, String> queryParams = new HashMap<>();
-
-        for (Map.Entry<String, String[]> entry : queryParamsArray.entrySet()) {
-            String key = entry.getKey();
-            String[] values = entry.getValue();
-
-            // Take first value (most common case)
-            String value = values.length > 0 ? values[0] : "";
-            queryParams.put(key, value);
-        }
+        Map<String, String> queryParams = getQueryParam(req.getQueryString());
 
         // 2. Lookup the route in the Radix Tree
         // TODO normalize path
-        NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(HttpMethod.fromString(method), path, queryParams);
         try {
+            NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(HttpMethod.fromString(method), path, queryParams);
             Object controller = this.prozedContainer.get(nodeExecutorWrapper.method().getDeclaringClass());
             Object result = nodeExecutorWrapper.execute(
                     controller,
@@ -83,5 +75,19 @@ public class DispatcherServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
+    }
+
+    private Map<String, String> getQueryParam(String query) {
+        Map<String, String> queryParams = new HashMap<>();
+        if (Objects.isNull(query)) {
+            return queryParams;
+        }
+        String[] queries = query.split("&");
+        Stream.of(queries)
+                .forEach(param -> {
+                    String[] parts = param.split("=");
+                    queryParams.put(parts[0], parts.length > 1 ? parts[1] : "");
+                });
+        return queryParams;
     }
 }

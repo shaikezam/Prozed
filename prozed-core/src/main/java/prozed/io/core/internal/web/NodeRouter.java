@@ -39,6 +39,7 @@ final public class NodeRouter {
             }
         }
         buildSubTreeForAddingRoute(path, segments, currentSegmentIndex, current, handler, method);
+        int i = 1;
     }
 
     public NodeExecutorWrapper lookup(HttpMethod method, String path, Map<String, String> queryParams) throws HttpException {
@@ -46,12 +47,15 @@ final public class NodeRouter {
         final Map<String, String> pathParams = new HashMap<>();
         Node current = root;
         for (String segment : segments) {
+            if (segment.isEmpty()) {
+                continue;
+            }
             Optional<Node> staticChild = current.getStaticChild(segment);
             if (staticChild.isEmpty()) {
                 Node wildCardChild = current.getWildCardChild();
                 if (wildCardChild == null) {
                     String errorMessage = "%s path not found".formatted(path);
-                    logger.error(errorMessage);
+                    logger.debug(errorMessage);
                     throw new HttpException(errorMessage, HttpCode.NOT_FOUND);
                 } else {
                     current = wildCardChild;

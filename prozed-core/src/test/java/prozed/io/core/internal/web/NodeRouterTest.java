@@ -89,7 +89,7 @@ class NodeRouterTest {
         // then
     }
 
-    public void twoPayloadParamsMethod(@PayloadParam("someParam") String param1, @PayloadParam("someParam2") String param2) {
+    public void twoPayloadParamsMethod(@PayloadParam String param1, @PayloadParam String param2) {
 
     }
 

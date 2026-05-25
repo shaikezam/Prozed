@@ -46,7 +46,7 @@ public record NodeExecutorWrapper(
                     Class<?> payloadType = parameter.getType();
                     args[i] = gson.fromJson(payload, payloadType);
                 } catch (Exception e) {
-                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam.value()), HttpCode.BAD_REQUEST, e);
+                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpCode.BAD_REQUEST, e);
                 }
             }
         }

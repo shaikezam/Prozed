@@ -634,13 +634,13 @@ class NodeExecutorWrapperTest {
             return param;
         }
 
-        public TestPayload queryPayloadMethod(@PayloadParam("data") TestPayload param) {
+        public TestPayload queryPayloadMethod(@PayloadParam TestPayload param) {
             return param;
         }
 
         public int mixMethod(@PathParam("var1") Long param1,
                                      @QueryParam("var2") Boolean param2,
-                                     @PayloadParam("var3") TestPayload param3) {
+                                     @PayloadParam TestPayload param3) {
             return param3.id();
         }
 

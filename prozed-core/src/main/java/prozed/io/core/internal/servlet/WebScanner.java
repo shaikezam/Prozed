@@ -1,6 +1,9 @@
 package prozed.io.core.internal.servlet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.*;
+import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflection.PackageScanner;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.internal.web.NodeRouter;
@@ -9,6 +12,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 public class WebScanner {
+    private static final Logger logger = LoggerFactory.getLogger(WebScanner.class);
     private final NodeRouter nodeRouter;
     private final PackageScanner packageScanner = new PackageScanner();
 
@@ -58,7 +62,7 @@ public class WebScanner {
             String fullPath = normalizePath(basePath, subPath);
             // Add to the Radix Tree for O(k) lookup time
             nodeRouter.addRoute(fullPath, method, httpMethod);
-            System.out.println("Mapped " + httpMethod + " " + fullPath + " -> " + method.getName());
+            logger.info("Mapped " + httpMethod + " " + fullPath + " -> " + method.getName());
         }
     }
 

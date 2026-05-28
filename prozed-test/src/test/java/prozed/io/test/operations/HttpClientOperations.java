@@ -1,13 +1,12 @@
 package prozed.io.test.operations;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
+import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpHeaders;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
 
@@ -16,20 +15,32 @@ public class HttpClientOperations {
     private final Gson gson;
     private final String host;
     private final String schema;
+    private final int port;
+    private final String basePath;
 
     public static HttpClientOperations createDefault() {
-        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http");
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", 8080, "");
     }
 
     public static HttpClientOperations createDefault(String host, String schema) {
-        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), host, schema);
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), host, schema, 8080, "");
+    }
+
+    public static HttpClientOperations createDefault(int port, String basePath) {
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", port, basePath);
     }
 
     public HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema) {
+        this(delegate, gson, host, schema, 8080, "");
+    }
+
+    public HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema, int port, String basePath) {
         this.delegate = delegate;
         this.gson = gson;
         this.host = host;
         this.schema = schema;
+        this.port = port;
+        this.basePath = normalizePath(basePath);
     }
 
     public <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
@@ -41,26 +52,26 @@ public class HttpClientOperations {
         return delegate.sendAsync(request, responseBodyHandler);
     }
 
-    public <T> DeserializedResponse<T> sendAndDeserializeWithResponse(HttpRequest request, Class<T> clazz)
-            throws IOException, InterruptedException {
-        return sendAndDeserializeWithResponse(request, TypeToken.get(clazz).getType());
+    public HttpRequest.Builder request(String path) {
+        return HttpRequest.newBuilder().uri(URI.create(url(path)));
     }
 
-    public <T> DeserializedResponse<T> sendAndDeserializeWithResponse(HttpRequest request, Type typeOfT)
+    public <T> DeserializedResponse<T> sendAndDeserializeWithResponse(HttpRequest request, Class<T> clazz)
             throws IOException, InterruptedException {
         HttpResponse<String> response = delegate.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() >= 300) {
-            throw new IOException("HTTP Request failed: " + response.statusCode());
-        }
-
-        T body = gson.fromJson(response.body(), typeOfT);
+        T body = gson.fromJson(response.body(), clazz);
         return new DeserializedResponse<>(response.statusCode(), response.headers(), body);
     }
 
-    public String baseUrl(int port, String path) {
-        String normalizedPath = path.startsWith("/") ? path : "/" + path;
-        return "%s://%s:%d%s".formatted(schema, host, port, normalizedPath);
+    private String url(String path) {
+        return "%s://%s:%d%s%s".formatted(schema, host, port, basePath, normalizePath(path));
+    }
+
+    private String normalizePath(String path) {
+        if (path == null || path.isBlank() || "/".equals(path)) {
+            return "";
+        }
+        return path.startsWith("/") ? path : "/" + path;
     }
 
     public record DeserializedResponse<T>(int statusCode, HttpHeaders headers, T body) {

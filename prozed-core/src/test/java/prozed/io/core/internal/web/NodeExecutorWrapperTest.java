@@ -7,7 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
-import prozed.io.core.internal.utils.RandomUtils;
+import prozed.io.test.utils.RandomUtils;
 
 import java.lang.reflect.Method;
 import java.util.Map;

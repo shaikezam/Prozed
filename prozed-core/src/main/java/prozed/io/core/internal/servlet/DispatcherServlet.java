@@ -7,13 +7,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.ContentType;
+import prozed.io.core.api.web.DeleteRequest;
+import prozed.io.core.api.web.GetRequest;
 import prozed.io.core.api.web.HttpMethod;
+import prozed.io.core.api.web.PostRequest;
+import prozed.io.core.api.web.PutRequest;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.web.HttpException;
 import prozed.io.core.internal.web.NodeExecutorWrapper;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -60,14 +65,22 @@ public class DispatcherServlet extends HttpServlet {
                     controller,
                     req.getReader().lines().collect(Collectors.joining(System.lineSeparator())),
                     this.gson);
-            resp.setContentType(ContentType.APPLICATION_JSON.name());
             if (result != null) {
-                resp.getWriter().write(gson.toJson(result));
+                Method handlerMethod = nodeExecutorWrapper.method();
+                ContentType produced = resolveProducedContentType(handlerMethod);
+
+                resp.setContentType(produced.value());
+                if (produced == ContentType.TEXT_PLAIN) {
+                    resp.getWriter().write(result.toString());
+                } else {
+                    resp.getWriter().write(gson.toJson(result));
+                }
             }
         } catch (Exception e) {
             logger.error("Exception while dispatching request", e);
             if (e instanceof HttpException exception) {
                 exception.getHttpCode().applyTo(resp);
+                resp.setContentType(ContentType.APPLICATION_JSON.value());
                 resp.getWriter().write("""
                                 {"error": "%s"}
                         """.formatted(e.getMessage()));
@@ -75,6 +88,30 @@ public class DispatcherServlet extends HttpServlet {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }
+    }
+
+    private ContentType resolveProducedContentType(Method method) {
+        GetRequest getRequest = method.getAnnotation(GetRequest.class);
+        if (getRequest != null) {
+            return getRequest.produces();
+        }
+
+        PostRequest postRequest = method.getAnnotation(PostRequest.class);
+        if (postRequest != null) {
+            return postRequest.produces();
+        }
+
+        PutRequest putRequest = method.getAnnotation(PutRequest.class);
+        if (putRequest != null) {
+            return putRequest.produces();
+        }
+
+        DeleteRequest deleteRequest = method.getAnnotation(DeleteRequest.class);
+        if (deleteRequest != null) {
+            return deleteRequest.produces();
+        }
+
+        return ContentType.APPLICATION_JSON;
     }
 
     private Map<String, String> getQueryParam(String query) {

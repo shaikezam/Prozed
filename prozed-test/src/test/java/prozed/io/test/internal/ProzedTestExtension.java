@@ -1,6 +1,8 @@
 package prozed.io.test.internal;
 
-import org.junit.jupiter.api.extension.*;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import prozed.io.test.api.ProzedTest;
 
 import java.lang.reflect.Method;
@@ -20,7 +22,6 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
         Class<?> mainClass = annotation.mainClass();
         Method mainMethod = mainClass.getMethod("main", String[].class);
 
-        // Start main method in a separate thread
         Thread serverThread = new Thread(() -> {
             try {
                 mainMethod.invoke(null, (Object) annotation.mainArgs());
@@ -31,15 +32,13 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
         serverThread.setDaemon(true);
         serverThread.start();
 
-        // Wait for server to start
         Thread.sleep(2000);
 
-        // Store thread reference for cleanup
         context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(SERVER_THREAD_KEY, serverThread);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         Thread serverThread = (Thread) context.getRoot()
                 .getStore(ExtensionContext.Namespace.GLOBAL)
                 .get(SERVER_THREAD_KEY);

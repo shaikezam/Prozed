@@ -3,9 +3,7 @@ package prozed.io.core.internal.servlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.*;
-import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.reflection.PackageScanner;
-import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.lang.reflect.Method;

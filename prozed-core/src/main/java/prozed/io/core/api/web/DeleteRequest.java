@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DeleteRequest {
     String value();
+
+    ContentType produces() default ContentType.APPLICATION_JSON;
 }

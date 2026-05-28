@@ -8,6 +8,15 @@
 
 A lightweight Java web framework with built-in dependency injection and REST API support.
 
+## Features
+
+- Lightweight embedded Tomcat server
+- Annotation-based routing
+- Path, query, and JSON payload binding
+- JSON and plain text responses
+- Dependency injection container
+- JUnit integration for HTTP-level tests
+
 ## Quick Start
 
 Add a `prozed.properties` file to `src/main/resources`:
@@ -38,38 +47,35 @@ public class Main {
 Create REST endpoints with simple annotations:
 
 ```java
-import java.util.List;
-
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.core.api.web.ContentType;
 import prozed.io.core.api.web.Controller;
 import prozed.io.core.api.web.GetRequest;
-import prozed.io.core.api.web.PostRequest;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
-import prozed.io.core.api.web.QueryParam;
+import prozed.io.core.api.web.PostRequest;
 
 @Bean
-@Controller(path = "/api/users")
+@Controller(path = "/")
 public class UserController {
 
     @Inject
     private UserService userService;
 
-    @GetRequest(value = "/{id}")
-    public User getUser(@PathParam("id") String id) {
-        return userService.findById(id);
+    @GetRequest(value = "/user/{id}")
+    public User getUser(@PathParam("{id}") int id) {
+        return userService.getUser(id).orElseThrow();
     }
 
-    @PostRequest(value = "/")
-    public User createUser(@PayloadParam User user) {
-        return userService.create(user);
+    @PostRequest(value = "/user")
+    public int createUser(@PayloadParam User user) {
+        return userService.createUser(user);
     }
 
-    @GetRequest(value = "/", produces = ContentType.TEXT_PLAIN)
-    public String getUsers(@QueryParam("page") int page) {
-        return userService.findAll(page).toString();
+    @GetRequest(value = "/health", produces = ContentType.TEXT_PLAIN)
+    public String health() {
+        return "OK";
     }
 }
 ```
@@ -81,27 +87,30 @@ Routes are built from the controller `path` plus the request annotation `value`.
 Create business logic services with `@Bean`:
 
 ```java
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import prozed.io.example.model.User;
 
 import prozed.io.core.api.di.Bean;
-import prozed.io.core.api.di.Inject;
 
 @Bean
 public class UserService {
 
-    @Inject
-    private UserRepository userRepository;
+    private final Map<Integer, User> userRepository = new HashMap<>();
 
-    public User findById(String id) {
-        return userRepository.findById(id);
+    public UserService() {
+        userRepository.put(1, new User(1, "a"));
     }
 
-    public User create(User user) {
-        return userRepository.save(user);
+    public Optional<User> getUser(int id) {
+        return Optional.ofNullable(userRepository.get(id));
     }
 
-    public List<User> findAll(int page) {
-        return userRepository.findAll(page);
+    public int createUser(User user) {
+        userRepository.putIfAbsent(user.id(), user);
+        return user.id();
     }
 }
 ```
@@ -137,14 +146,6 @@ Prozed reads `prozed.properties` from the application classpath.
 - `@Bean` - Mark a class for the DI container
 - `@Inject` - Inject another bean into a field
 
-## Features
-
-- Lightweight embedded Tomcat server
-- Annotation-based routing
-- Path, query, and JSON payload binding
-- JSON and plain text responses
-- Dependency injection container
-- JUnit integration for HTTP-level tests
 
 ## Testing
 
@@ -152,6 +153,7 @@ Use `prozed-test` to start your application before JUnit tests run:
 
 ```java
 import org.junit.jupiter.api.Test;
+import prozed.io.example.model.User;
 import prozed.io.test.api.ProzedTest;
 import prozed.io.test.operations.HttpClientOperations;
 
@@ -163,17 +165,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ProzedTest(mainClass = com.example.Main.class)
 class UserControllerTest {
 
-    private final HttpClientOperations http = HttpClientOperations.createDefault(8080, "/api/users");
+    private final HttpClientOperations http = HttpClientOperations.createDefault(8080, "/");
 
     @Test
     void getsUser() throws Exception {
-        HttpRequest request = http.request("/1")
+        HttpRequest request = http.request("/user/1")
                 .GET()
                 .build();
 
         HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
+    }
+
+    @Test
+    void createsUser() throws Exception {
+        User user = new User(2, "b");
+        String jsonBody = new com.google.gson.Gson().toJson(user);
+
+        HttpRequest request = http.request("/user")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertEquals("2", response.body());
     }
 }
 ```
@@ -202,3 +220,5 @@ For tests, add:
 ## License
 
 MIT License
+
+

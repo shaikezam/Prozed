@@ -3,7 +3,7 @@ package prozed.io.core.internal.properties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import prozed.io.core.internal.utils.RandomUtils;
+import prozed.io.test.utils.RandomUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

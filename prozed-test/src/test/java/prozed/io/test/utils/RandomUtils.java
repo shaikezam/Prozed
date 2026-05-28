@@ -1,4 +1,4 @@
-package prozed.io.core.internal.utils;
+package prozed.io.test.utils;
 
 import java.util.Random;
 import java.util.stream.IntStream;

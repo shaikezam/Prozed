@@ -1,4 +1,4 @@
-package prozed.io.core.internal.utils;
+package prozed.io.test.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

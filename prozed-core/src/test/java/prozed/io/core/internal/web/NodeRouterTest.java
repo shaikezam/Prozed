@@ -7,7 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
-import prozed.io.core.internal.utils.ReflectionUtils;
+import prozed.io.test.utils.ReflectionUtils;
 
 import java.lang.reflect.Method;
 

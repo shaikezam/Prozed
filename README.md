@@ -6,8 +6,7 @@
 
 # Prozed Framework
 
-A lightweight Java web framework with built-in dependency injection and REST API support.
-
+Prozed is a tiny Java micro-framework designed for simple REST APIs, featuring a lightweight web stack with built-in dependency injection.
 ## Features
 
 - Lightweight embedded Tomcat server

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ProzedTest(mainClass = prozed.io.example.Main.class)
-public class MyControllerTest {
+public class UserControllerTest {
 
     private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8082, "/");
 

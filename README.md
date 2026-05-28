@@ -10,12 +10,27 @@ A lightweight Java web framework with built-in dependency injection and REST API
 
 ## Quick Start
 
+Add a `prozed.properties` file to `src/main/resources`:
+
+```properties
+web.service.port=8080
+web.service.scan-package=com.example
+```
+
+Start Prozed from your application entry point:
+
 ```java
-ProzedServer.builder()
-    .scan("com.example.controllers")
-    .withPort(8080)
-    .build()
-    .start();
+package com.example;
+
+import prozed.io.core.internal.ProzedServer;
+
+public class Main {
+    public static void main(String[] args) {
+        try (ProzedServer server = new ProzedServer()) {
+            server.start();
+        }
+    }
+}
 ```
 
 ## Controllers
@@ -23,8 +38,11 @@ ProzedServer.builder()
 Create REST endpoints with simple annotations:
 
 ```java
+import java.util.List;
+
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
+import prozed.io.core.api.web.ContentType;
 import prozed.io.core.api.web.Controller;
 import prozed.io.core.api.web.GetRequest;
 import prozed.io.core.api.web.PostRequest;
@@ -33,82 +51,132 @@ import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
 
 @Bean
-@Controller("/api/users")
+@Controller(path = "/api/users")
 public class UserController {
-    
+
     @Inject
     private UserService userService;
-    
-    @GetRequest("/{id}")
+
+    @GetRequest(value = "/{id}")
     public User getUser(@PathParam("id") String id) {
         return userService.findById(id);
     }
-    
-    @PostRequest("/")
-    public User createUser(@PayloadParam("user") User user) {
+
+    @PostRequest(value = "/")
+    public User createUser(@PayloadParam User user) {
         return userService.create(user);
     }
-    
-    @GetRequest("/")
-    public List<User> getUsers(@QueryParam("page") int page) {
-        return userService.findAll(page);
+
+    @GetRequest(value = "/", produces = ContentType.TEXT_PLAIN)
+    public String getUsers(@QueryParam("page") int page) {
+        return userService.findAll(page).toString();
     }
 }
 ```
 
+Routes are built from the controller `path` plus the request annotation `value`. By default, handlers produce JSON. Set `produces = ContentType.TEXT_PLAIN` when returning plain strings, numbers, or booleans as text.
+
 ## Services
 
-Create business logic services with @Bean:
+Create business logic services with `@Bean`:
 
 ```java
+import java.util.List;
+
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 
 @Bean
 public class UserService {
-    
+
     @Inject
     private UserRepository userRepository;
-    
+
     public User findById(String id) {
         return userRepository.findById(id);
     }
-    
+
     public User create(User user) {
         return userRepository.save(user);
     }
-    
+
     public List<User> findAll(int page) {
         return userRepository.findAll(page);
     }
 }
 ```
 
+`@Bean` classes are discovered from `web.service.scan-package`. Fields marked with `@Inject` are resolved from the Prozed dependency injection container.
+
+## Configuration
+
+Prozed reads `prozed.properties` from the application classpath.
+
+| Property | Description | Default |
+| --- | --- | --- |
+| `web.service.port` | Embedded Tomcat port | `8080` |
+| `web.service.scan-package` | Base package scanned for `@Bean` and `@Controller` classes | Required |
+
 ## Annotations
 
 ### Web
-- `@Controller("/path")` - Mark class as controller
-- `@GetRequest("/path")` - Handle GET requests
-- `@PostRequest("/path")` - Handle POST requests
-- `@PutRequest("/path")` - Handle PUT requests
-- `@DeleteRequest("/path")` - Handle DELETE requests
+- `@Controller(path = "/path")` - Mark a class as a controller and set its base route
+- `@GetRequest(value = "/path")` - Handle GET requests
+- `@PostRequest(value = "/path")` - Handle POST requests
+- `@PutRequest(value = "/path")` - Handle PUT requests
+- `@DeleteRequest(value = "/path")` - Handle DELETE requests
+- `produces = ContentType.APPLICATION_JSON` - Default JSON response content type
+- `produces = ContentType.TEXT_PLAIN` - Plain text response content type
 
 ### Parameters
-- `@PathParam("name")` - URL path parameters
-- `@QueryParam("name")` - Query string parameters
-- `@PayloadParam("name")` - Request body (JSON)
+- `@PathParam("name")` - Bind URL path parameters such as `/{id}`
+- `@QueryParam("name")` - Bind query string parameters such as `?page=1`
+- `@PayloadParam` - Bind the JSON request body to an object
 
 ### Dependency Injection
-- `@Bean` - Mark class for DI container (all beans are singletons)
+- `@Bean` - Mark a class for the DI container
+- `@Inject` - Inject another bean into a field
 
 ## Features
 
-- ✅ Lightweight embedded Tomcat server
-- ✅ Annotation-based routing
-- ✅ Path and query parameter binding
-- ✅ JSON request/response handling
-- ✅ Dependency injection container
-- ✅ Type-safe parameter validation
+- Lightweight embedded Tomcat server
+- Annotation-based routing
+- Path, query, and JSON payload binding
+- JSON and plain text responses
+- Dependency injection container
+- JUnit integration for HTTP-level tests
+
+## Testing
+
+Use `prozed-test` to start your application before JUnit tests run:
+
+```java
+import org.junit.jupiter.api.Test;
+import prozed.io.test.api.ProzedTest;
+import prozed.io.test.operations.HttpClientOperations;
+
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@ProzedTest(mainClass = com.example.Main.class)
+class UserControllerTest {
+
+    private final HttpClientOperations http = HttpClientOperations.createDefault(8080, "/api/users");
+
+    @Test
+    void getsUser() throws Exception {
+        HttpRequest request = http.request("/1")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+    }
+}
+```
 
 ## Maven
 
@@ -117,6 +185,17 @@ public class UserService {
     <groupId>io.github.shaikezam</groupId>
     <artifactId>prozed-core</artifactId>
     <version>1.0-SNAPSHOT</version>
+</dependency>
+```
+
+For tests, add:
+
+```xml
+<dependency>
+    <groupId>io.github.shaikezam</groupId>
+    <artifactId>prozed-test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <scope>test</scope>
 </dependency>
 ```
 

@@ -6,7 +6,6 @@ import prozed.io.test.api.ProzedTest;
 import prozed.io.test.operations.HttpClientOperations;
 import prozed.io.test.operations.HttpClientOperations.DeserializedResponse;
 
-import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
@@ -16,13 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ProzedTest(mainClass = prozed.io.example.Main.class)
 public class MyControllerTest {
 
-    private final HttpClientOperations httpClient = HttpClientOperations.createDefault();
-    private final String baseUrl = httpClient.baseUrl(8080, "/temp");
+    private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8080, "/temp");
 
     @Test
     void testHello() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/hello"))
+        HttpRequest request = httpClient.request("/hello")
                 .GET()
                 .build();
 
@@ -35,8 +32,7 @@ public class MyControllerTest {
 
     @Test
     void testNumber() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/number"))
+        HttpRequest request = httpClient.request("/number")
                 .GET()
                 .build();
 
@@ -49,8 +45,7 @@ public class MyControllerTest {
 
     @Test
     void testEnabled() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/enabled"))
+        HttpRequest request = httpClient.request("/enabled")
                 .GET()
                 .build();
 
@@ -63,8 +58,7 @@ public class MyControllerTest {
 
     @Test
     void testStatus() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/status?hi=test&hi2=123"))
+        HttpRequest request = httpClient.request("/status?hi=test&hi2=123")
                 .GET()
                 .build();
 
@@ -77,8 +71,7 @@ public class MyControllerTest {
 
     @Test
     void testGetUser() throws Exception {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/user"))
+        HttpRequest request = httpClient.request("/user")
                 .GET()
                 .build();
 
@@ -95,8 +88,7 @@ public class MyControllerTest {
         TempController.User user = new TempController.User(99, "testUser");
         String jsonBody = new com.google.gson.Gson().toJson(user);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(baseUrl + "/echo"))
+        HttpRequest request = httpClient.request("/echo")
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();

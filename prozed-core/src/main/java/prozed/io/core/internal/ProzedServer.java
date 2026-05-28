@@ -3,9 +3,12 @@ package prozed.io.core.internal;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import prozed.io.core.internal.di.ProzedContainer;
+import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
 import prozed.io.core.internal.servlet.DispatcherServlet;
 import prozed.io.core.internal.servlet.WebScanner;
-import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.Closeable;
@@ -13,60 +16,24 @@ import java.io.File;
 
 public class ProzedServer implements Closeable {
     private final Tomcat tomcat;
-    private final int port;
-    private final String contextPath;
-    private final String scanPackage; // New field to know what to scan
+    private final ProzedPropertiesWrapper properties = new ProzedPropertiesWrapper();
     private ProzedContainer container;
+    private static final Logger logger = LoggerFactory.getLogger(ProzedServer.class);
 
     public ProzedContainer getContainer() {
         return container;
     }
 
-    private ProzedServer(Builder builder) {
-        this.port = builder.port;
-        this.contextPath = builder.contextPath;
-        this.scanPackage = builder.scanPackage;
+    public ProzedServer() {
         this.tomcat = new Tomcat();
         setupTomcat();
-    }
-
-    private void setupTomcat() {
-        tomcat.setPort(port);
-
-        // Isolate Tomcat metadata to system temp
-        String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + port).getAbsolutePath();
-        tomcat.setBaseDir(baseDir);
-
-        // MUST trigger connector before start()
-        tomcat.getConnector();
-
-        // InitializFlightContainere the Prozed Engine
-        NodeRouter nodeRouter = new NodeRouter();
-        container = new ProzedContainer(scanPackage);
-        WebScanner scanner = new WebScanner(nodeRouter);
-
-        // Scan the user-provided package
-        if (scanPackage != null && !scanPackage.isEmpty()) {
-            scanner.scan(scanPackage);
-        }
-
-        // Setup Tomcat Context
-        String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();
-        new File(fakeDocBase).mkdirs();
-
-        Context ctx = tomcat.addContext(contextPath, fakeDocBase);
-
-        // Link the Router to the Dispatcher
-        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, container);
-        Tomcat.addServlet(ctx, "prozedDispatcher", dispatcher);
-        ctx.addServletMappingDecoded("/*", "prozedDispatcher");
     }
 
     public void start() {
         try {
             tomcat.start();
-            System.out.println("ProzedServer started on port " + port);
-            System.out.println("Scanning package: " + scanPackage);
+            logger.info("ProzedServer started on port {}", properties.getServicePort());
+            logger.info("Scanning package: {}", properties.getScanPackage());
             tomcat.getServer().await();
         } catch (LifecycleException e) {
             throw new RuntimeException("Failed to start ProzedServer", e);
@@ -86,32 +53,25 @@ public class ProzedServer implements Closeable {
         }
     }
 
-    public static class Builder {
-        private int port = 8080;
-        private String contextPath = "";
-        private String scanPackage = ""; // Store the package to scan
+    private void setupTomcat() {
+        tomcat.setPort(properties.getServicePort());
+        String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + properties.getServicePort()).getAbsolutePath();
+        tomcat.setBaseDir(baseDir);
+        tomcat.getConnector();
+        NodeRouter nodeRouter = new NodeRouter();
+        container = new ProzedContainer(properties.getScanPackage());
+        WebScanner scanner = new WebScanner(nodeRouter);
 
-        public Builder withPort(int port) {
-            this.port = port;
-            return this;
+        // Scan the user-provided package
+        if (properties.getScanPackage() != null && !properties.getScanPackage().isEmpty()) {
+            scanner.scan(properties.getScanPackage());
         }
-
-        public Builder scan(String packageName) {
-            this.scanPackage = packageName;
-            return this;
-        }
-
-        public Builder withContextPath(String contextPath) {
-            this.contextPath = contextPath.startsWith("/") ? contextPath : "/" + contextPath;
-            return this;
-        }
-
-        public ProzedServer build() {
-            return new ProzedServer(this);
-        }
+        String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();
+        new File(fakeDocBase).mkdirs();
+        Context ctx = tomcat.addContext("/", fakeDocBase);
+        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, container);
+        Tomcat.addServlet(ctx, "prozedDispatcher", dispatcher);
+        ctx.addServletMappingDecoded("/*", "prozedDispatcher");
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
 }

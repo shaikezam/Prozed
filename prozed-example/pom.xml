@@ -20,6 +20,7 @@
     </licenses>
 
     <properties>
+        <mariadb-java-client.version>3.5.8</mariadb-java-client.version>
     </properties>
 
     <dependencies>
@@ -27,6 +28,15 @@
             <groupId>io.github.shaikezam</groupId>
             <artifactId>prozed-core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.shaikezam</groupId>
+            <artifactId>prozed-jdbc</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

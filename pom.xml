@@ -26,11 +26,13 @@
         <junit-jupiter-api.version>6.0.2</junit-jupiter-api.version>
         <mockito.version>5.21.0</mockito.version>
         <slf4j-api.version>2.0.17</slf4j-api.version>
+        <h2.version>2.4.240</h2.version>
     </properties>
 
     <modules>
         <module>prozed-core</module>
         <module>prozed-test</module>
+        <module>prozed-jdbc</module>
         <module>prozed-example</module>
     </modules>
 
@@ -39,6 +41,11 @@
             <dependency>
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-core</artifactId>
+                <version>${tomcat-embed-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat</groupId>
+                <artifactId>tomcat-jdbc</artifactId>
                 <version>${tomcat-embed-core.version}</version>
             </dependency>
             <dependency>
@@ -55,6 +62,11 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
                 <version>${slf4j-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
             </dependency>
 
             <!-- TEST dependencies -->

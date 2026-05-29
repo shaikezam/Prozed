@@ -16,7 +16,6 @@ import java.io.File;
 
 public class ProzedServer implements Closeable {
     private final Tomcat tomcat;
-    private final ProzedPropertiesWrapper properties = new ProzedPropertiesWrapper();
     private ProzedContainer container;
     private static final Logger logger = LoggerFactory.getLogger(ProzedServer.class);
 
@@ -32,8 +31,8 @@ public class ProzedServer implements Closeable {
     public void start() {
         try {
             tomcat.start();
-            logger.info("ProzedServer started on port {}", properties.getServicePort());
-            logger.info("Scanning package: {}", properties.getScanPackage());
+            logger.info("ProzedServer started on port {}", ProzedPropertiesWrapper.getServicePort());
+            logger.info("Scanning package: {}", ProzedPropertiesWrapper.getScanPackage());
             tomcat.getServer().await();
         } catch (LifecycleException e) {
             throw new RuntimeException("Failed to start ProzedServer", e);
@@ -54,17 +53,17 @@ public class ProzedServer implements Closeable {
     }
 
     private void setupTomcat() {
-        tomcat.setPort(properties.getServicePort());
-        String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + properties.getServicePort()).getAbsolutePath();
+        tomcat.setPort(ProzedPropertiesWrapper.getServicePort());
+        String baseDir = new File(System.getProperty("java.io.tmpdir"), "prozed-tomcat-" + ProzedPropertiesWrapper.getServicePort()).getAbsolutePath();
         tomcat.setBaseDir(baseDir);
         tomcat.getConnector();
         NodeRouter nodeRouter = new NodeRouter();
-        container = new ProzedContainer(properties.getScanPackage());
+        container = new ProzedContainer(ProzedPropertiesWrapper.getScanPackage());
         WebScanner scanner = new WebScanner(nodeRouter);
 
         // Scan the user-provided package
-        if (properties.getScanPackage() != null && !properties.getScanPackage().isEmpty()) {
-            scanner.scan(properties.getScanPackage());
+        if (ProzedPropertiesWrapper.getScanPackage() != null && !ProzedPropertiesWrapper.getScanPackage().isEmpty()) {
+            scanner.scan(ProzedPropertiesWrapper.getScanPackage());
         }
         String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();
         new File(fakeDocBase).mkdirs();

@@ -11,15 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ExtendWith(MockitoExtension.class)
 class ProzedPropertiesWrapperTest {
 
-    private final ProzedPropertiesWrapper prozedPropertiesWrapper = new ProzedPropertiesWrapper();
-
     @Test
     void testGetDefaultProperties() {
         // given + then
-        int servicePort = prozedPropertiesWrapper.getServicePort();
-        String scanPackage = prozedPropertiesWrapper.getScanPackage();
+        int servicePort = ProzedPropertiesWrapper.getServicePort();
+        String scanPackage = ProzedPropertiesWrapper.getScanPackage();
         String dummyValue = RandomUtils.randomAlphbetString(10);
-        String dummyPropertyValue = prozedPropertiesWrapper.getProperty("DUMMY", dummyValue);
+        String dummyPropertyValue = ProzedPropertiesWrapper.getProperty("DUMMY", dummyValue);
 
         // then
         assertEquals(8080, servicePort);

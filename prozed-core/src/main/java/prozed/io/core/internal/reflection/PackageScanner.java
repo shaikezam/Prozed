@@ -48,7 +48,6 @@ public class PackageScanner {
     private Optional<Class<?>> extractedClassName(String packageName, Class<? extends Annotation> annotation, File f) throws ClassNotFoundException {
         Class<?> clazz = Class.forName(packageName + '.' + f.getName().substring(0, f.getName().length() - 6));  // remove '.class'
         if (clazz.isAnnotationPresent(annotation)) {
-            logger.info("Found class: {}", clazz.getName());
             return Optional.of(clazz);
         }
         return Optional.empty();

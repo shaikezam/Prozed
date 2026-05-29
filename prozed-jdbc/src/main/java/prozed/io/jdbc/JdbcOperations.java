@@ -21,6 +21,10 @@ public class JdbcOperations {
         POOL = buildDataSource();
     }
 
+    public javax.sql.DataSource getDataSource() {
+        return POOL;
+    }
+
     // ── Core Execute ──────────────────────────────────────────────────────────
 
     public <T> T execute(String sql, ResultSetHandler<T> handler, Object... params) {

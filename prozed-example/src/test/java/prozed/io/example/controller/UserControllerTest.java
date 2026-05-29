@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ProzedTest(mainClass = prozed.io.example.Main.class)
 public class UserControllerTest {
 
-    private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8082, "/");
+    private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8080, "/");
 
     @Test
     void testGetUser() throws Exception {

@@ -7,11 +7,12 @@ import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.core.internal.reflection.PackageScanner;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProzedContainer {
@@ -25,6 +26,7 @@ public final class ProzedContainer {
     private final PackageScanner packageScanner = new PackageScanner();
 
     public ProzedContainer(final String baseApplicationPath) {
+        loadModulesBeans();
         findBeansAndInjectedClasses(baseApplicationPath);
         validateAllInjectedAreBeans();
         buildDependencyTree();
@@ -35,7 +37,8 @@ public final class ProzedContainer {
     }
 
     private void findBeansAndInjectedClasses(String baseApplicationPath) {
-        this.beanedClasses = packageScanner.scan(baseApplicationPath, Bean.class);
+        Set<Class<?>> scanned = packageScanner.scan(baseApplicationPath, Bean.class);
+        beanedClasses.addAll(scanned); // ✅ merge, keep module beans
         for (Class<?> clazz : beanedClasses) {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
@@ -103,5 +106,33 @@ public final class ProzedContainer {
         }
         visiting.remove(clazz);
         processed.add(clazz);
+    }
+
+    private void loadModulesBeans() {
+        try {
+            Enumeration<URL> resources = Thread.currentThread()
+                    .getContextClassLoader()
+                    .getResources("META-INF/services/prozed.io.core.api.di.Bean");
+
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+                    reader.lines()
+                            .map(String::trim)
+                            .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+                            .forEach(className -> {
+                                try {
+                                    Class<?> clazz = Class.forName(className);
+                                    beanedClasses.add(clazz);
+                                    logger.info("Prozed: registered module bean {}", className);
+                                } catch (ClassNotFoundException e) {
+                                    throw new IllegalStateException("Prozed: module bean not found: %s".formatted(className), e);
+                                }
+                            });
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Prozed: failed to load module beans", e);
+        }
     }
 }

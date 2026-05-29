@@ -1,7 +1,9 @@
 package prozed.io.example.service;
 
 import prozed.io.core.api.di.Bean;
+import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
+import prozed.io.jdbc.JdbcOperations;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +12,9 @@ import java.util.Optional;
 
 @Bean
 public class UserService {
+
+    @Inject
+    private JdbcOperations jdbcOperations;
 
     private final Map<Integer, User> userRepository = new HashMap<>();
 

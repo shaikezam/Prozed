@@ -24,4 +24,8 @@ public class UserRepository {
                 },
                 id);
     }
+
+    public int createUser(User user) {
+        return jdbcOperations.insert("INSERT INTO users (name) VALUES (?)", user.name());
+    }
 }

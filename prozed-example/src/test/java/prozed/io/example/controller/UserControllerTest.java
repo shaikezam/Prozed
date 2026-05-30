@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ProzedTest(mainClass = prozed.io.example.Main.class)
 public class UserControllerTest {
 
-    private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8080, "/");
+    private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8081, "/");
 
     @Test
     void testGetUser() throws Exception {
@@ -25,7 +25,7 @@ public class UserControllerTest {
                 .build();
         User excepted = new UserBuilder()
                 .withId(1)
-                .withName("User")
+                .withName("Alice")
                 .build();
 
         DeserializedResponse<User> response = httpClient.sendAndDeserializeWithResponse(request, User.class);

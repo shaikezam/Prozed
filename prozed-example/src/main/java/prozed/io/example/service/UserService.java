@@ -30,7 +30,6 @@ public class UserService {
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
 
-        userRepository.putIfAbsent(user.id(), user);
-        return user.id();
+        return userRepositoryV2.createUser(user);
     }
 }

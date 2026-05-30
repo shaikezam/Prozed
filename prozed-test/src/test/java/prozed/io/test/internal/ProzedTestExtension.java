@@ -4,6 +4,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import prozed.io.test.api.ProzedTest;
+import prozed.io.test.utils.TestPropertiesReader;
 
 import java.lang.reflect.Method;
 
@@ -32,6 +33,7 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
         serverThread.setDaemon(true);
         serverThread.start();
 
+        waitForServer(Integer.parseInt(TestPropertiesReader.getProperty("web.service.port")));
         Thread.sleep(2000);
 
         context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(SERVER_THREAD_KEY, serverThread);
@@ -46,5 +48,17 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
         if (serverThread != null && serverThread.isAlive()) {
             serverThread.interrupt();
         }
+    }
+
+    private void waitForServer(int port) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 8000;
+        while (System.currentTimeMillis() < deadline) {
+            try (java.net.Socket socket = new java.net.Socket("localhost", port)) {
+                return; // ✅ server is up
+            } catch (java.io.IOException e) {
+                Thread.sleep(200);
+            }
+        }
+        throw new IllegalStateException("Prozed server did not start within %dms on port %d".formatted(1000, port));
     }
 }

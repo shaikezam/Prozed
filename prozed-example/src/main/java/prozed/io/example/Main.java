@@ -15,10 +15,10 @@ public class Main {
         org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
 
         try (ProzedServer server = new ProzedServer()) {
-            JdbcOperations jdbc = (JdbcOperations) server.getContainer().get(JdbcOperations.class);
-            try (Connection conn = jdbc.getDataSource().getConnection()) {
-                logger.info("DB connected: {}", conn.getMetaData().getURL());
-            }
+//            JdbcOperations jdbc = (JdbcOperations) server.getContainer().get(JdbcOperations.class);
+//            try (Connection conn = jdbc.getDataSource().getConnection()) {
+//                logger.info("DB connected: {}", conn.getMetaData().getURL());
+//            }
             server.start();
         }
     }

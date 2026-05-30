@@ -3,6 +3,7 @@ package prozed.io.example.service;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
+import prozed.io.example.repository.UserRepository;
 import prozed.io.jdbc.JdbcOperations;
 
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import java.util.Optional;
 public class UserService {
 
     @Inject
-    private JdbcOperations jdbcOperations;
+    private UserRepository userRepositoryV2;
 
     private final Map<Integer, User> userRepository = new HashMap<>();
 
@@ -23,13 +24,12 @@ public class UserService {
     }
 
     public Optional<User> getUser(int id) {
-        return Optional.ofNullable(userRepository.get(id));
+        return Optional.ofNullable(userRepositoryV2.getUser(id));
     }
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
 
-        userRepository.putIfAbsent(user.id(), user);
-        return user.id();
+        return userRepositoryV2.createUser(user);
     }
 }

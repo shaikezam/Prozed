@@ -28,4 +28,11 @@ public class Constants {
     public static final String DB_POOL_REMOVE_ABANDONED = "db.pool.remove-abandoned";
     public static final String DB_POOL_REMOVE_ABANDONED_TIMEOUT = "db.pool.remove-abandoned-timeout";
     public static final String DB_POOL_LOG_ABANDONED = "db.pool.log-abandoned";
+
+    // Flyway
+    public static final String FLYWAY_ENABLED = "flyway.enabled";
+    public static final String FLYWAY_LOCATIONS = "flyway.locations";
+    public static final String FLYWAY_BASELINE_ON_MIGRATE = "flyway.baseline-on-migrate";
+    public static final String FLYWAY_TABLE = "flyway.table";
+
 }

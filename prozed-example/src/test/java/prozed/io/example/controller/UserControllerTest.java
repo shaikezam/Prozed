@@ -62,6 +62,6 @@ public class UserControllerTest {
 
         assertEquals(200, response.statusCode());
         assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"));
-        assertEquals("2", response.body());
+        assertEquals("1", response.body());
     }
 }

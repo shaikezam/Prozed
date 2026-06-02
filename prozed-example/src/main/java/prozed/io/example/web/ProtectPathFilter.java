@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class ProtectPathFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProtectPathFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProtectPathFilter.class);
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -30,13 +30,13 @@ public class ProtectPathFilter implements Filter {
             }
         }
         if (!sessionIdCookiePresent) {
-            logger.warn("sessionId cookie not present");
+            LOGGER.warn("sessionId cookie not present");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Set 401 Unauthorized status code
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized will redirect to login page...");
             return;
         }
         // Log the request details
-        logger.info("Request from {} authorized", request.getRemoteAddr());
+        LOGGER.info("Request from {} authorized", request.getRemoteAddr());
 
         filterChain.doFilter(servletRequest, servletResponse);
     }

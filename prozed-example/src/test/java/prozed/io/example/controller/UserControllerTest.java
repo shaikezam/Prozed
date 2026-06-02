@@ -78,4 +78,18 @@ public class UserControllerTest {
         // then
         assertEquals(401, response.statusCode());
     }
+
+    @Test
+    void testMethodNotAllowedFilter() throws Exception {
+        // given
+        HttpRequest request = httpClient.request("/api/v1/test")
+                .GET()
+                .build();
+
+        // when
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // then
+        assertEquals(405, response.statusCode());
+    }
 }

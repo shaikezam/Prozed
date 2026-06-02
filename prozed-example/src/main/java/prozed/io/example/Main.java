@@ -2,10 +2,11 @@ package prozed.io.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prozed.io.core.internal.ProzedServer;
-import prozed.io.jdbc.JdbcOperations;
+import prozed.io.core.api.web.FilterWrapper;
+import prozed.io.core.api.web.ProzedServer;
+import prozed.io.example.web.MethodNotAllowedFilter;
+import prozed.io.example.web.ProtectPathFilter;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 public class Main {
@@ -15,10 +16,8 @@ public class Main {
         org.h2.tools.Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082").start();
 
         try (ProzedServer server = new ProzedServer()) {
-//            JdbcOperations jdbc = (JdbcOperations) server.getContainer().get(JdbcOperations.class);
-//            try (Connection conn = jdbc.getDataSource().getConnection()) {
-//                logger.info("DB connected: {}", conn.getMetaData().getURL());
-//            }
+            server.addFilter(new FilterWrapper("protectFilter", "/protect", new ProtectPathFilter()));
+            server.addFilter(new FilterWrapper("methodNotAllowedFilter", "/api/v1/*", new MethodNotAllowedFilter()));
             server.start();
         }
     }

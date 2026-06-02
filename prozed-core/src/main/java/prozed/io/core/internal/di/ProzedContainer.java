@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProzedContainer {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProzedContainer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProzedContainer.class);
     private final Map<Class<?>, Object> beansMapping = new ConcurrentHashMap<>();
     private final Set<Class<?>> injectedClasses = new HashSet<>();
     private final Set<Class<?>> processed = new HashSet<>();
@@ -58,7 +58,7 @@ public final class ProzedContainer {
             return;
         }
         String errorMessage = "Can't inject [%s], fields are not marked as @Bean".formatted(notMarkAsBeans);
-        logger.error(errorMessage);
+        LOGGER.error(errorMessage);
         throw new IllegalStateException(errorMessage);
     }
 
@@ -80,7 +80,7 @@ public final class ProzedContainer {
     private void buildTree(Class<?> clazz) {
         if (visiting.contains(clazz)) {
             String errorMessage = "Cycle detected: %s".formatted(clazz.getName());
-            logger.error(errorMessage);
+            LOGGER.error(errorMessage);
             throw new IllegalStateException(errorMessage);
         }
         if (processed.contains(clazz)) return;
@@ -124,7 +124,7 @@ public final class ProzedContainer {
                                 try {
                                     Class<?> clazz = Class.forName(className);
                                     beanedClasses.add(clazz);
-                                    logger.info("Prozed: registered module bean {}", className);
+                                    LOGGER.info("Prozed: registered module bean {}", className);
                                 } catch (ClassNotFoundException e) {
                                     throw new IllegalStateException("Prozed: module bean not found: %s".formatted(className), e);
                                 }

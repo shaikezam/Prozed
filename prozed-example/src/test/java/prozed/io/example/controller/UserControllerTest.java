@@ -64,4 +64,18 @@ public class UserControllerTest {
         assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"));
         assertEquals("1", response.body());
     }
+
+    @Test
+    void testProtectFilter() throws Exception {
+        // given
+        HttpRequest request = httpClient.request("/protect")
+                .GET()
+                .build();
+
+        // when
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // then
+        assertEquals(401, response.statusCode());
+    }
 }

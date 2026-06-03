@@ -17,18 +17,14 @@ public class FlywayMigration {
     @Inject
     private JdbcOperations jdbcOperations;
 
-    public FlywayMigration() {
+    public void init() {
         if (!Boolean.parseBoolean(ProzedPropertiesWrapper.getProperty(FLYWAY_ENABLED, "false"))) {
             logger.info("Flyway migration disabled");
             return;
         }
 
         Flyway flyway = Flyway.configure()
-                .dataSource(
-                        ProzedPropertiesWrapper.getProperty(DB_URL),
-                        ProzedPropertiesWrapper.getProperty(DB_USERNAME),
-                        ProzedPropertiesWrapper.getProperty(DB_PASSWORD)
-                )
+                .dataSource(jdbcOperations.getDataSource())
                 .locations(ProzedPropertiesWrapper.getProperty(FLYWAY_LOCATIONS, "classpath:db/migration"))
                 .baselineOnMigrate(Boolean.parseBoolean(ProzedPropertiesWrapper.getProperty(FLYWAY_BASELINE_ON_MIGRATE, "true")))
                 .table(ProzedPropertiesWrapper.getProperty(FLYWAY_TABLE, "flyway_schema_history"))

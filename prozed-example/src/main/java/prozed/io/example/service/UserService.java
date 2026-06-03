@@ -4,12 +4,8 @@ import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
 import prozed.io.example.repository.UserRepository;
-import prozed.io.jdbc.JdbcOperations;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Bean
 public class UserService {
@@ -30,6 +26,10 @@ public class UserService {
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
 
-        return userRepositoryV2.createUser(user);
+        return userRepositoryV2.createUsers(user);
+    }
+
+    public void createUsers(List<User> users) {
+        userRepositoryV2.createUsers(users);
     }
 }

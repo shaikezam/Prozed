@@ -11,6 +11,8 @@ import prozed.io.core.api.web.PostRequest;
 import prozed.io.example.model.User;
 import prozed.io.example.service.UserService;
 
+import java.util.List;
+
 @Bean
 @Controller(path = "/")
 public class UserController {
@@ -26,6 +28,11 @@ public class UserController {
     @PostRequest(value = "/user")
     public int createUser(@PayloadParam User user) {
         return userService.createUser(user);
+    }
+
+    @PostRequest(value = "/users")
+    public void createUser(@PayloadParam List<User> users) {
+        userService.createUsers(users);
     }
 
     @GetRequest(value = "/health", produces = ContentType.TEXT_PLAIN)

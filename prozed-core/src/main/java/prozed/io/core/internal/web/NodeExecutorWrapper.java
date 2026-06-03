@@ -9,6 +9,7 @@ import prozed.io.core.internal.reflection.TypeConvertor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 public record NodeExecutorWrapper(
@@ -43,7 +44,7 @@ public record NodeExecutorWrapper(
             PayloadParam payloadParam = parameter.getAnnotation(PayloadParam.class);
             if (payloadParam != null) {
                 try {
-                    Class<?> payloadType = parameter.getType();
+                    Type payloadType = parameter.getParameterizedType();
                     args[i] = gson.fromJson(payload, payloadType);
                 } catch (Exception e) {
                     throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpCode.BAD_REQUEST, e);

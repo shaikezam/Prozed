@@ -8,6 +8,7 @@ import prozed.io.jdbc.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 @Bean
 public class UserRepository {
@@ -25,7 +26,16 @@ public class UserRepository {
                 id);
     }
 
-    public int createUser(User user) {
-        return jdbcOperations.insert("INSERT INTO users (name) VALUES (?)", user.name());
+    public int createUsers(User user) {
+        return jdbcOperations.update("INSERT INTO users (name) VALUES (?)", user.name());
+    }
+
+    public void createUsers(List<User> users) {
+        jdbcOperations.inTransaction((connection -> {
+            for(User user : users) {
+                jdbcOperations.update("INSERT INTO users (name) VALUES (?)", user.name());
+            }
+            return null;
+        }));
     }
 }

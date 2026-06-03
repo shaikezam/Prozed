@@ -1,3 +1,3 @@
 1. TestPropertiesReader
-2. interceptors
-3. Transaction
+2. Transaction
+3. JMS

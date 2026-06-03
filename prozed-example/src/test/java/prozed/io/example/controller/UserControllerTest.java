@@ -9,6 +9,7 @@ import prozed.io.test.operations.HttpClientOperations.DeserializedResponse;
 
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,6 +64,26 @@ public class UserControllerTest {
         assertEquals(200, response.statusCode());
         assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"));
         assertEquals("1", response.body());
+    }
+
+    @Test
+    void testCreateUsers() throws Exception {
+        List<User> users = List.of(
+                new UserBuilder()
+                        .build(),
+                new UserBuilder()
+                        .build());
+        String jsonBody = new com.google.gson.Gson().toJson(users);
+
+        HttpRequest request = httpClient.request("/users")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"));
     }
 
     @Test

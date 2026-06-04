@@ -5,33 +5,59 @@ import prozed.io.core.api.di.Bean;
 import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
 import prozed.io.jdbc.exception.JdbcOperationsException;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static prozed.io.jdbc.utils.Constants.*;
 
 @Bean
 public class JdbcOperations {
 
-    private static final DataSource POOL;
+    private final DataSource pool;
+    private final ThreadLocal<Connection> txConnection = new ThreadLocal<>();
 
-    static {
-        POOL = buildDataSource();
+    public JdbcOperations() {
+        pool = buildDataSource();
     }
 
     public javax.sql.DataSource getDataSource() {
-        return POOL;
+        return pool;
     }
 
-    // ── Core Execute ──────────────────────────────────────────────────────────
+    public <T> T inTransaction(JdbcCallback<T> work) {
+        if (txConnection.get() == null) {
+            try {
+                return work.run(txConnection.get());
+            } catch (SQLException e) {
+                throw new JdbcOperationsException("Transaction work failed", e);
+            }
+        }
+        Connection conn = null;
+        try {
+            conn = pool.getConnection();
+            conn.setAutoCommit(false);
+            txConnection.set(conn);
+            T result = work.run(conn);
+            conn.commit();
+            return result;
+        } catch (Exception e) {
+            rollback(conn);
+            throw new JdbcOperationsException("Transaction roll back", e);
+        } finally {
+            txConnection.remove();
+            restoreAutoCommitAndClose(conn);
+        }
+    }
 
     public <T> T execute(String sql, ResultSetHandler<T> handler, Object... params) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = POOL.getConnection();
+            connection = borrow();
             preparedStatement = connection.prepareStatement(sql);
             bindParams(preparedStatement, params);
             try (ResultSet rs = preparedStatement.executeQuery()) {
@@ -41,17 +67,15 @@ public class JdbcOperations {
             throw new JdbcOperationsException("Failed to execute query: %s".formatted(sql), e);
         } finally {
             closeQuietly(preparedStatement);
-            closeQuietly(connection);
+            release(connection);
         }
     }
-
-    // ── DML ───────────────────────────────────────────────────────────────────
 
     public int update(String sql, Object... params) {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = POOL.getConnection();
+            connection = borrow();
             preparedStatement = connection.prepareStatement(sql);
             bindParams(preparedStatement, params);
             return preparedStatement.executeUpdate();
@@ -59,19 +83,9 @@ public class JdbcOperations {
             throw new JdbcOperationsException("Failed to execute update: %s".formatted(sql), e);
         } finally {
             closeQuietly(preparedStatement);
-            closeQuietly(connection);
+            release(connection);
         }
     }
-
-    public int insert(String sql, Object... params) {
-        return update(sql, params);
-    }
-
-    public int delete(String sql, Object... params) {
-        return update(sql, params);
-    }
-
-    // ── Query ─────────────────────────────────────────────────────────────────
 
     public <T> List<T> select(String sql, RowMapper<T> mapper, Object... params) {
         return execute(sql, rs -> {
@@ -92,17 +106,37 @@ public class JdbcOperations {
         }, params);
     }
 
-    public <T> Stream<T> stream(String sql, RowMapper<T> mapper, Object... params) {
-        return select(sql, mapper, params).stream();
+    private Connection borrow() throws SQLException {
+        Connection conn = txConnection.get();
+        return (conn != null) ? conn : pool.getConnection();
     }
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
-    public void close() {
-        POOL.close();
+    private void release(Connection conn) {
+        if (conn != null && conn != txConnection.get()) {
+            closeQuietly(conn);
+        }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    private void restoreAutoCommitAndClose(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                // best effort
+            }
+        }
+        closeQuietly(conn);
+    }
+
+    private void rollback(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException e) {
+                // best effort
+            }
+        }
+    }
 
     private void bindParams(PreparedStatement ps, Object... params) throws SQLException {
         for (int i = 0; i < params.length; i++) {
@@ -118,8 +152,6 @@ public class JdbcOperations {
             }
         }
     }
-
-    // ── Pool Setup ────────────────────────────────────────────────────────────
 
     private static DataSource buildDataSource() {
         DataSource ds = new DataSource();

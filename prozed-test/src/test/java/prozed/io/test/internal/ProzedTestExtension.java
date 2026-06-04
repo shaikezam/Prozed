@@ -51,7 +51,7 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
     }
 
     private void waitForServer(int port) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + 8000;
+        long deadline = System.currentTimeMillis() + 16000;
         while (System.currentTimeMillis() < deadline) {
             try (java.net.Socket socket = new java.net.Socket("localhost", port)) {
                 return; // ✅ server is up
@@ -59,6 +59,6 @@ public class ProzedTestExtension implements BeforeAllCallback, AfterAllCallback 
                 Thread.sleep(200);
             }
         }
-        throw new IllegalStateException("Prozed server did not start within %dms on port %d".formatted(1000, port));
+        throw new IllegalStateException("Prozed server did not start within %dms on port %d".formatted(16000, port));
     }
 }

@@ -1,21 +1,20 @@
 package prozed.io.core.internal.web;
 
-import prozed.io.core.api.web.HttpCode;
 
 public class HttpException extends RuntimeException {
-    private final HttpCode httpCode;
+    private final int httpCode;
 
-    public HttpException(String message, HttpCode httpCode) {
+    public HttpException(String message, int httpCode) {
         super(message);
         this.httpCode = httpCode;
     }
 
-    public HttpException(String message, HttpCode httpCode, Throwable e) {
+    public HttpException(String message, int httpCode, Throwable e) {
         super(message, e);
         this.httpCode = httpCode;
     }
 
-    public HttpCode getHttpCode() {
+    public int getHttpCode() {
         return httpCode;
     }
 }

@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,6 +105,15 @@ public final class ProzedContainer {
                 }
             }
         }
+        try {
+            Method init = clazz.getDeclaredMethod("init");
+            init.invoke(currentInstance);
+        } catch (NoSuchMethodException ignored) {
+            // no init method, that's fine
+        } catch (Exception e) {
+            throw new RuntimeException("Prozed: Failed to call init() on " + clazz.getName(), e);
+        }
+
         visiting.remove(clazz);
         processed.add(clazz);
     }

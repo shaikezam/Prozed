@@ -1,7 +1,7 @@
 package prozed.io.core.internal.web;
 
 import com.google.gson.Gson;
-import prozed.io.core.api.web.HttpCode;
+import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
@@ -9,6 +9,7 @@ import prozed.io.core.internal.reflection.TypeConvertor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 public record NodeExecutorWrapper(
@@ -43,10 +44,10 @@ public record NodeExecutorWrapper(
             PayloadParam payloadParam = parameter.getAnnotation(PayloadParam.class);
             if (payloadParam != null) {
                 try {
-                    Class<?> payloadType = parameter.getType();
+                    Type payloadType = parameter.getParameterizedType();
                     args[i] = gson.fromJson(payload, payloadType);
                 } catch (Exception e) {
-                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpCode.BAD_REQUEST, e);
+                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpServletResponse.SC_BAD_REQUEST, e);
                 }
             }
         }

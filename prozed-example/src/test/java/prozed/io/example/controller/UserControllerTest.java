@@ -21,12 +21,12 @@ public class UserControllerTest {
 
     @Test
     void testGetUser() throws Exception {
-        HttpRequest request = httpClient.request("/user/1")
+        HttpRequest request = httpClient.request("/user/2")
                 .GET()
                 .build();
         User excepted = new UserBuilder()
-                .withId(1)
-                .withName("Alice")
+                .withId(2)
+                .withName("Bob")
                 .build();
 
         DeserializedResponse<User> response = httpClient.sendAndDeserializeWithResponse(request, User.class);

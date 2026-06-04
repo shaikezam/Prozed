@@ -1,3 +1,4 @@
-1. TestPropertiesReader
-2. Transaction
-3. JMS
+1. Rollback in tests
+2. expose `JdbcOperations` in tests
+3. TestPropertiesReader
+4. JMS

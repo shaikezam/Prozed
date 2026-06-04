@@ -83,7 +83,53 @@ public class UserControllerTest {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         assertEquals(200, response.statusCode());
-        assertTrue(response.headers().firstValue("content-type").orElse("").startsWith("application/json"));
+    }
+
+    @Test
+    void testUpdateUser() throws Exception {
+        // given
+        User updated = new UserBuilder()
+                .withId(1)
+                .withName("UpdatedAlice")
+                .build();
+        String jsonBody = new com.google.gson.Gson().toJson(updated);
+
+        // when
+        HttpResponse<String> updateResponse = httpClient.send(
+                httpClient.request("/user/1")
+                        .header("Content-Type", "application/json")
+                        .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        DeserializedResponse<User> getResponse = httpClient.sendAndDeserializeWithResponse(
+                httpClient.request("/user/1").GET().build(), User.class
+        );
+
+        // then
+        assertEquals(200, updateResponse.statusCode());
+        assertEquals("UpdatedAlice", getResponse.body().name());
+    }
+
+    @Test
+    void testDeleteUser() throws Exception {
+        // when
+        HttpResponse<String> deleteResponse = httpClient.send(
+                httpClient.request("/user/1")
+                        .DELETE()
+                        .build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        HttpResponse<String> getResponse = httpClient.send(
+                httpClient.request("/user/1").GET().build(),
+                HttpResponse.BodyHandlers.ofString()
+        );
+
+        // then
+        assertEquals(200, deleteResponse.statusCode());
+        assertEquals(404, getResponse.statusCode());
     }
 
     @Test

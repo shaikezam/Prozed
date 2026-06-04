@@ -11,25 +11,28 @@ import java.util.*;
 public class UserService {
 
     @Inject
-    private UserRepository userRepositoryV2;
-
-    private final Map<Integer, User> userRepository = new HashMap<>();
-
-    public UserService() {
-        userRepository.put(1, new User(1, "User"));
-    }
+    private UserRepository userRepository;
 
     public Optional<User> getUser(int id) {
-        return Optional.ofNullable(userRepositoryV2.getUser(id));
+        return Optional.ofNullable(userRepository.getUser(id));
     }
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
 
-        return userRepositoryV2.createUsers(user);
+        return userRepository.createUsers(user);
     }
 
     public void createUsers(List<User> users) {
-        userRepositoryV2.createUsers(users);
+        userRepository.createUsers(users);
+    }
+
+    public void deleteUser(int id) {
+        userRepository.deleteUser(id);
+    }
+
+    public void updateUser(User user) {
+        Objects.requireNonNull(user, "User must not be null");
+        userRepository.updateUser(user);
     }
 }

@@ -6,18 +6,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prozed.io.core.api.web.ContentType;
-import prozed.io.core.api.web.DeleteRequest;
-import prozed.io.core.api.web.GetRequest;
-import prozed.io.core.api.web.HttpMethod;
-import prozed.io.core.api.web.PostRequest;
-import prozed.io.core.api.web.PutRequest;
+import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.web.HttpException;
 import prozed.io.core.internal.web.NodeExecutorWrapper;
 import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -78,7 +74,7 @@ public class DispatcherServlet extends HttpServlet {
             }
         } catch (Exception e) {
             logger.error("Exception while dispatching request", e);
-            if (e instanceof HttpException exception) {
+            if ((e instanceof InvocationTargetException ? e.getCause() : e) instanceof HttpException exception) {
                 resp.setStatus(exception.getHttpCode());
                 resp.setContentType(ContentType.APPLICATION_JSON.value());
                 resp.getWriter().write("""

@@ -1,7 +1,7 @@
 package prozed.io.core.internal.web;
 
 import com.google.gson.Gson;
-import prozed.io.core.api.web.HttpCode;
+import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;
@@ -47,7 +47,7 @@ public record NodeExecutorWrapper(
                     Type payloadType = parameter.getParameterizedType();
                     args[i] = gson.fromJson(payload, payloadType);
                 } catch (Exception e) {
-                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpCode.BAD_REQUEST, e);
+                    throw new HttpException("Payload parameter %s could not be parsed".formatted(payloadParam), HttpServletResponse.SC_BAD_REQUEST, e);
                 }
             }
         }

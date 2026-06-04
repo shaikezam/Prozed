@@ -1,8 +1,8 @@
 package prozed.io.core.internal.web;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prozed.io.core.api.web.HttpCode;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.api.web.PayloadParam;
 
@@ -56,7 +56,7 @@ final public class NodeRouter {
                 if (wildCardChild == null) {
                     String errorMessage = "%s path not found".formatted(path);
                     logger.debug(errorMessage);
-                    throw new HttpException(errorMessage, HttpCode.NOT_FOUND);
+                    throw new HttpException(errorMessage, HttpServletResponse.SC_NOT_FOUND);
                 } else {
                     current = wildCardChild;
                     pathParams.put(wildCardChild.getPath(), segment);
@@ -69,7 +69,7 @@ final public class NodeRouter {
         if (handler.isEmpty()) {
             String errorMessage = "%s method not found for path %s".formatted(method, path);
             logger.error(errorMessage);
-            throw new HttpException(errorMessage, HttpCode.NOT_SUPPORTED);
+            throw new HttpException(errorMessage, HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
         return new NodeExecutorWrapper(pathParams, queryParams, handler.get());
     }

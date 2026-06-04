@@ -79,7 +79,7 @@ public class DispatcherServlet extends HttpServlet {
         } catch (Exception e) {
             logger.error("Exception while dispatching request", e);
             if (e instanceof HttpException exception) {
-                exception.getHttpCode().applyTo(resp);
+                resp.setStatus(exception.getHttpCode());
                 resp.setContentType(ContentType.APPLICATION_JSON.value());
                 resp.getWriter().write("""
                                 {"error": "%s"}

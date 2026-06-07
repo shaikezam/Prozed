@@ -106,12 +106,12 @@ public class JdbcOperations {
         }, params);
     }
 
-    private Connection borrow() throws SQLException {
+    protected Connection borrow() throws SQLException {
         Connection conn = txConnection.get();
         return (conn != null) ? conn : pool.getConnection();
     }
 
-    private void release(Connection conn) {
+    protected void release(Connection conn) {
         if (conn != null && conn != txConnection.get()) {
             closeQuietly(conn);
         }

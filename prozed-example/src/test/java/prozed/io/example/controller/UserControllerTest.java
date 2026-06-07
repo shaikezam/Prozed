@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ProzedTest(mainClass = prozed.io.example.Main.class)
+@ProzedTest(mainClass = prozed.io.example.Main.class, cleanUp = true)
 public class UserControllerTest {
 
     private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8081, "/");

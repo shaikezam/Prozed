@@ -23,10 +23,10 @@ public final class ProzedContainer {
     private final Set<Class<?>> injectedClasses = new HashSet<>();
     private final Set<Class<?>> processed = new HashSet<>();
     private final Set<Class<?>> visiting = new HashSet<>();
-    private Set<Class<?>> beanedClasses = new HashSet<>();
+    private final Set<Class<?>> beanedClasses = new HashSet<>();
     private final PackageScanner packageScanner = new PackageScanner();
 
-    public ProzedContainer(final String baseApplicationPath) {
+    public void init(final String baseApplicationPath) {
         loadModulesBeans();
         findBeansAndInjectedClasses(baseApplicationPath);
         validateAllInjectedAreBeans();
@@ -35,6 +35,10 @@ public final class ProzedContainer {
 
     public Object get(Class<?> clazz) {
         return beansMapping.get(clazz);
+    }
+
+    public void registerBean(Class<?> clazz, Object bean) {
+        beansMapping.put(clazz, bean);
     }
 
     private void findBeansAndInjectedClasses(String baseApplicationPath) {

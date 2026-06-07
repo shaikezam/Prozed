@@ -13,5 +13,8 @@ import java.lang.annotation.Target;
 @ExtendWith(ProzedTestExtension.class)
 public @interface ProzedTest {
     Class<?> mainClass() default Void.class;
+
     String[] mainArgs() default {};
+
+    boolean cleanUp() default false;
 }

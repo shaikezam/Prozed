@@ -1,21 +1,27 @@
 package prozed.io.core.internal.di;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import prozed.io.core.internal.di.container.TestClasses;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProzedContainerTest {
+    private ProzedContainer container;
+
+    @BeforeEach
+    void setUp() {
+        container = new ProzedContainer();
+    }
 
     @Test
     void testFindBeansAndInjectedClassesThrowsException() {
         // given & when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                    new ProzedContainer("prozed.io.core.internal.di.fieldnotmarkasbean");
+                    container.init("prozed.io.core.internal.di.fieldnotmarkasbean");
                 }
         );
         assertTrue(exception.getMessage().contains("not marked as @Bean"));
@@ -25,7 +31,7 @@ class ProzedContainerTest {
     void testDirectCircularDependencyThrowsException() {
         // given & when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                    new ProzedContainer("prozed.io.core.internal.di.directcirculardependency");
+                    container.init("prozed.io.core.internal.di.directcirculardependency");
                 }
         );
         assertTrue(exception.getMessage().contains("Cycle detected"));
@@ -35,7 +41,7 @@ class ProzedContainerTest {
     void testDirectCircularDependencyWithRootThrowsException() {
         // given & when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                    new ProzedContainer("prozed.io.core.internal.di.directcirculardependencywithroot");
+                    container.init("prozed.io.core.internal.di.directcirculardependencywithroot");
                 }
         );
         assertTrue(exception.getMessage().contains("Cycle detected"));
@@ -45,7 +51,7 @@ class ProzedContainerTest {
     void testInDirectCircularDependencyWithRootThrowsException() {
         // given & when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-                    new ProzedContainer("prozed.io.core.internal.di.indirectcirculardependencywithroot");
+                    container.init("prozed.io.core.internal.di.indirectcirculardependencywithroot");
                 }
         );
         assertTrue(exception.getMessage().contains("Cycle detected"));
@@ -54,7 +60,7 @@ class ProzedContainerTest {
     @Test
     void testContainerResolvesValidDependencyChain() {
         // given & when
-        ProzedContainer container = new ProzedContainer("prozed.io.core.internal.di.container");
+        container.init("prozed.io.core.internal.di.container");
 
         // then
         assertNotNull(container.get(TestClasses.BeanClassA1.class));

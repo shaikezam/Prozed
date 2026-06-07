@@ -22,11 +22,11 @@ public class ProzedServer implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProzedServer.class);
 
     private final Tomcat tomcat;
-    private ProzedContainer container;
+    private static ProzedContainer CONTAINER = new ProzedContainer();
     private final Map<String, FilterWrapper> filters = new HashMap<>();
 
-    public ProzedContainer getContainer() {
-        return container;
+    public static ProzedContainer getContainer() {
+        return CONTAINER;
     }
 
     public ProzedServer() {
@@ -55,7 +55,7 @@ public class ProzedServer implements Closeable {
             if (tomcat.getServer() != null && tomcat.getServer().getState().isAvailable()) {
                 tomcat.stop();
                 tomcat.destroy();
-                System.out.println("ProzedServer shut down successfully.");
+                LOGGER.info("ProzedServer shut down successfully.");
             }
         } catch (LifecycleException e) {
             throw new RuntimeException("Failed to close ProzedServer", e);
@@ -68,7 +68,7 @@ public class ProzedServer implements Closeable {
         tomcat.setBaseDir(baseDir);
         tomcat.getConnector();
         NodeRouter nodeRouter = new NodeRouter();
-        container = new ProzedContainer(ProzedPropertiesWrapper.getScanPackage());
+        CONTAINER.init(ProzedPropertiesWrapper.getScanPackage());
         WebScanner scanner = new WebScanner(nodeRouter);
 
         // Scan the user-provided package
@@ -79,7 +79,7 @@ public class ProzedServer implements Closeable {
         new File(fakeDocBase).mkdirs();
         Context ctx = tomcat.addContext("/", fakeDocBase);
         addFilter(ctx);
-        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, container);
+        DispatcherServlet dispatcher = new DispatcherServlet(nodeRouter, CONTAINER);
         Tomcat.addServlet(ctx, "prozedDispatcher", dispatcher);
         ctx.addServletMappingDecoded("/*", "prozedDispatcher");
     }

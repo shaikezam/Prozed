@@ -48,7 +48,14 @@
             <groupId>io.github.shaikezam</groupId>
             <artifactId>prozed-test</artifactId>
             <version>${project.version}</version>
-            <classifier>tests</classifier>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.shaikezam</groupId>
+            <artifactId>prozed-jdbc</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>

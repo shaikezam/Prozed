@@ -94,7 +94,7 @@ public final class ProzedContainer {
             try {
                 return c.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to create " + c.getName(), e);
+                throw new RuntimeException("Prozed: Failed to create " + c.getName() + " must have an empty constructor", e);
             }
         });
         for (Field field : clazz.getDeclaredFields()) {

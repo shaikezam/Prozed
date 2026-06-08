@@ -1,3 +1,2 @@
-prozed.io.jdbc.FlywayMigration
+prozed.io.jdbc.internal.FlywayMigration
 prozed.io.jdbc.JdbcOperations
-

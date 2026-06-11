@@ -106,6 +106,12 @@ public class JdbcOperations {
         }, params);
     }
 
+    public void preDestroy() {
+        if (this.pool != null) {
+            this.pool.close();
+        }
+    }
+
     protected Connection borrow() throws SQLException {
         Connection conn = txConnection.get();
         return (conn != null) ? conn : pool.getConnection();

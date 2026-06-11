@@ -37,9 +37,6 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
             this.testJdbcOpsInstance = testJdbcOpsCls.getConstructor().newInstance();
             Method registerMethod = prozedContainerClass.getMethod("registerBean", Class.class, Object.class);
             registerMethod.invoke(this.containerInstance, Class.forName(JDBC_OPS_CLASS), this.testJdbcOpsInstance);
-            int i = 1;
-            // inject TestJdbcOperations to ProzedContainer
-            // AfterEacgh rollback conenction
         }
 
         if (annotation.mainClass() == Void.class) {
@@ -48,19 +45,26 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
 
         Class<?> mainClass = annotation.mainClass();
         Method mainMethod = mainClass.getMethod("main", String[].class);
+        Thread serverThread = null;
+        try {
+            serverThread = new Thread(() -> {
+                try {
+                    mainMethod.invoke(null, (Object) annotation.mainArgs());
+                } catch (Exception e) {
+                    LOGGER.error("Failed to start main method", e);
+                    Thread.currentThread().interrupt();
+                }
+            });
+            serverThread.setDaemon(true);
+            serverThread.start();
 
-        Thread serverThread = new Thread(() -> {
-            try {
-                mainMethod.invoke(null, (Object) annotation.mainArgs());
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to start main method", e);
-            }
-        });
-        serverThread.setDaemon(true);
-        serverThread.start();
-
-        waitForServer(Integer.parseInt(TestPropertiesReader.getProperty("web.service.port")));
-        Thread.sleep(2000);
+            waitForServer(Integer.parseInt(TestPropertiesReader.getProperty("web.service.port")));
+            //Thread.sleep(2000);
+        } catch (Exception e) {
+            int i = 1;
+        } finally {
+            interrupt(serverThread);
+        }
 
         context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(SERVER_THREAD_KEY, serverThread);
     }
@@ -106,6 +110,10 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
                 .getStore(ExtensionContext.Namespace.GLOBAL)
                 .get(SERVER_THREAD_KEY);
 
+        interrupt(serverThread);
+    }
+
+    private static void interrupt(Thread serverThread) {
         if (serverThread != null && serverThread.isAlive()) {
             serverThread.interrupt();
         }

@@ -18,7 +18,7 @@ public class FlywayMigration {
     @Inject
     private JdbcOperations jdbcOperations;
 
-    public void init() {
+    public void preInit() {
         if (!Boolean.parseBoolean(ProzedPropertiesWrapper.getProperty(FLYWAY_ENABLED, "false"))) {
             logger.info("Flyway migration disabled");
             return;

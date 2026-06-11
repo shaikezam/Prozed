@@ -1,8 +1,8 @@
 package prozed.io.jms;
 
+import jakarta.jms.Destination;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSProducer;
-import jakarta.jms.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
@@ -18,11 +18,14 @@ public class JmsOperations {
     @Inject
     private JmsRegistry jmsRegistry;
 
-    public void sendMessage(String message, String destination, DestinationType destinationType) {
+    public void sendMessage(String message, String prozedDestination, DestinationType destinationType) {
         try (JMSContext context = jmsRegistry.getConnectionFactory().createContext()) {
-            Queue queue = context.createQueue(destination);
+            Destination destination = switch (destinationType) {
+                case QUEUE -> context.createQueue(prozedDestination);
+                case TOPIC -> context.createTopic(prozedDestination);
+            };
             JMSProducer producer = context.createProducer();
-            producer.send(queue, "Hello from Prozed");
+            producer.send(destination, "Hello from Prozed");
             LOGGER.debug("Message sent.");
         }
     }

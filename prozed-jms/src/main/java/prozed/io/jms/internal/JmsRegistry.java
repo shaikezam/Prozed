@@ -28,9 +28,6 @@ public class JmsRegistry {
     private final PackageScanner packageScanner = new PackageScanner();
 
     public JmsRegistry() {
-        if (!Boolean.parseBoolean(ProzedPropertiesWrapper.getProperty(JMS_ENABLED))) {
-            throw new IllegalStateException("%s not configured".formatted(JMS_ENABLED));
-        }
         this.connectionFactory = new ActiveMQConnectionFactory(
                 ProzedPropertiesWrapper.getProperty(JMS_USERNAME),
                 ProzedPropertiesWrapper.getProperty(JMS_PASSWORD),

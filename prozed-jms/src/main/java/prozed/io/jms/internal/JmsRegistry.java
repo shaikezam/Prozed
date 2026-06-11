@@ -55,17 +55,22 @@ public class JmsRegistry {
         });
     }
 
+    public ConnectionFactory getConnectionFactory() {
+        return connectionFactory;
+    }
+
     private void registerListener(Object listener, String destination) throws Exception {
         Connection conn = connectionFactory.createConnection();
         Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = session.createTopic(destination);
-        MessageConsumer consumer = session.createConsumer(topic);
+        Queue queue = session.createQueue(destination);
+        MessageConsumer consumer = session.createConsumer(queue);
         consumer.setMessageListener((MessageListener) listener);
         conn.start();
         connections.add(conn);
     }
 
     public void preDestroy() {
+        LOGGER.info("Destroying JmsRegistry");
         for (Connection connection : connections) {
             try {
                 connection.close();

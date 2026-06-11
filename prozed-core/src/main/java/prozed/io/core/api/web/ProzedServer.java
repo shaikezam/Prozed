@@ -39,6 +39,7 @@ public class ProzedServer implements Closeable {
             tomcat.start();
             LOGGER.info("ProzedServer started on port {}", ProzedPropertiesWrapper.getServicePort());
             LOGGER.info("Scanning package: {}", ProzedPropertiesWrapper.getScanPackage());
+            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             tomcat.getServer().await();
         } catch (LifecycleException e) {
             throw new RuntimeException("Failed to start ProzedServer", e);
@@ -53,6 +54,7 @@ public class ProzedServer implements Closeable {
     public void close() {
         try {
             if (tomcat.getServer() != null && tomcat.getServer().getState().isAvailable()) {
+                getContainer().preDestroy();
                 tomcat.stop();
                 tomcat.destroy();
                 LOGGER.info("ProzedServer shut down successfully.");

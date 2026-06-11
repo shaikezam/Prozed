@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Listener {
     String destination();
+    DestinationType destinationType();
 }

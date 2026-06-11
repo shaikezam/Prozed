@@ -8,9 +8,9 @@ import prozed.io.core.api.di.Bean;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
 import prozed.io.core.internal.reflection.PackageScanner;
+import prozed.io.jms.api.DestinationType;
 import prozed.io.jms.api.Listener;
 
-import java.lang.IllegalStateException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +45,7 @@ public class JmsRegistry {
         listeners.forEach(listener -> {
             Listener annotation = listener.getAnnotation(Listener.class);
             try {
-                this.registerListener(prozedContainer.get(listener), annotation.destination());
+                this.registerListener(prozedContainer.get(listener), annotation.destination(), annotation.destinationType());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -56,11 +56,14 @@ public class JmsRegistry {
         return connectionFactory;
     }
 
-    private void registerListener(Object listener, String destination) throws Exception {
+    private void registerListener(Object listener, String prozedDestination, DestinationType destinationType) throws Exception {
         Connection conn = connectionFactory.createConnection();
         Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue(destination);
-        MessageConsumer consumer = session.createConsumer(queue);
+        Destination destination = switch (destinationType) {
+            case QUEUE -> session.createQueue(prozedDestination);
+            case TOPIC -> session.createTopic(prozedDestination);
+        };
+        MessageConsumer consumer = session.createConsumer(destination);
         consumer.setMessageListener((MessageListener) listener);
         conn.start();
         connections.add(conn);

@@ -48,32 +48,4 @@ public class UserService {
         Objects.requireNonNull(user, "User must not be null");
         userRepository.updateUser(user);
     }
-
-    private void sendMessagesAsync(User user, int userId) {
-        ExecutorService executor = Executors.newFixedThreadPool(5);
-        int messagesPerThread = 10000 / 5;
-
-        for (int i = 0; i < 5; i++) {
-            executor.submit(() -> {
-                for (int j = 0; j < messagesPerThread; j++) {
-                    String message = "User %d created: %s - Message %d"
-                            .formatted(userId, user.name(), j);
-                    try {
-                        jmsOperations.sendMessage(message, "mail", DestinationType.QUEUE);
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to send message", e);
-                    }
-                }
-            });
-        }
-
-        executor.shutdown();
-        try {
-            // block until all 10000 messages are sent
-            executor.awaitTermination(5, MINUTES);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Message sending interrupted", e);
-        }
-    }
 }

@@ -31,6 +31,10 @@ public final class ProzedContainer {
         findBeansAndInjectedClasses(baseApplicationPath);
         validateAllInjectedAreBeans();
         buildDependencyTree();
+        postInit();
+    }
+
+    private void postInit() {
         for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
             try {
                 Method init = entry.getKey().getDeclaredMethod("postInit");
@@ -43,7 +47,6 @@ public final class ProzedContainer {
         }
     }
 
-
     public void preDestroy() {
         for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
             try {
@@ -53,6 +56,19 @@ public final class ProzedContainer {
                 // no postInit method, that's fine
             } catch (Exception e) {
                 throw new RuntimeException("Prozed: Failed to call preDestroy() on " + entry.getKey().getName(), e);
+            }
+        }
+    }
+
+    public void postDestroy() {
+        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+            try {
+                Method init = entry.getKey().getDeclaredMethod("postDestroy");
+                init.invoke(entry.getValue());
+            } catch (NoSuchMethodException ignored) {
+                // no postInit method, that's fine
+            } catch (Exception e) {
+                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + entry.getKey().getName(), e);
             }
         }
     }

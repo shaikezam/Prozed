@@ -7,9 +7,10 @@ import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
 import prozed.io.example.repository.UserRepository;
 import prozed.io.jms.JmsOperations;
-import prozed.io.jms.api.DestinationType;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Bean
 public class UserService {
@@ -27,7 +28,6 @@ public class UserService {
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
-        jmsOperations.sendRawMessage("%s user create".formatted(user), "mail", DestinationType.QUEUE);
         return userRepository.createUsers(user);
     }
 

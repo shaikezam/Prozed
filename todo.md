@@ -1,2 +1,3 @@
-1. expose `JdbcOperations` in tests
-2. JMS
+1. scan jars
+2. expose `JdbcOperations` in tests
+3. JMS

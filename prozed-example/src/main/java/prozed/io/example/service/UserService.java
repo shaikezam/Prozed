@@ -8,13 +8,8 @@ import prozed.io.example.model.User;
 import prozed.io.example.repository.UserRepository;
 import prozed.io.jms.JmsOperations;
 import prozed.io.jms.api.DestinationType;
-import prozed.io.jms.internal.JmsRegistry;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Bean
 public class UserService {
@@ -32,7 +27,7 @@ public class UserService {
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
-        jmsOperations.sendMessage("%s user create".formatted(user), "mail", DestinationType.QUEUE);
+        jmsOperations.sendRawMessage("%s user create".formatted(user), "mail", DestinationType.QUEUE);
         return userRepository.createUsers(user);
     }
 

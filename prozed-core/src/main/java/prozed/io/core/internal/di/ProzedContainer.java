@@ -31,6 +31,46 @@ public final class ProzedContainer {
         findBeansAndInjectedClasses(baseApplicationPath);
         validateAllInjectedAreBeans();
         buildDependencyTree();
+        postInit();
+    }
+
+    private void postInit() {
+        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+            try {
+                Method init = entry.getKey().getDeclaredMethod("postInit");
+                init.invoke(entry.getValue());
+            } catch (NoSuchMethodException ignored) {
+                // no postInit method, that's fine
+            } catch (Exception e) {
+                throw new RuntimeException("Prozed: Failed to call postInit() on " + entry.getKey().getName(), e);
+            }
+        }
+    }
+
+    public void preDestroy() {
+        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+            try {
+                Method init = entry.getKey().getDeclaredMethod("preDestroy");
+                init.invoke(entry.getValue());
+            } catch (NoSuchMethodException ignored) {
+                // no postInit method, that's fine
+            } catch (Exception e) {
+                throw new RuntimeException("Prozed: Failed to call preDestroy() on " + entry.getKey().getName(), e);
+            }
+        }
+    }
+
+    public void postDestroy() {
+        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+            try {
+                Method init = entry.getKey().getDeclaredMethod("postDestroy");
+                init.invoke(entry.getValue());
+            } catch (NoSuchMethodException ignored) {
+                // no postInit method, that's fine
+            } catch (Exception e) {
+                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + entry.getKey().getName(), e);
+            }
+        }
     }
 
     public Object get(Class<?> clazz) {
@@ -110,12 +150,12 @@ public final class ProzedContainer {
             }
         }
         try {
-            Method init = clazz.getDeclaredMethod("init");
+            Method init = clazz.getDeclaredMethod("preInit");
             init.invoke(currentInstance);
         } catch (NoSuchMethodException ignored) {
-            // no init method, that's fine
+            // no preInit method, that's fine
         } catch (Exception e) {
-            throw new RuntimeException("Prozed: Failed to call init() on " + clazz.getName(), e);
+            throw new RuntimeException("Prozed: Failed to call preInit() on " + clazz.getName(), e);
         }
 
         visiting.remove(clazz);
@@ -137,6 +177,9 @@ public final class ProzedContainer {
                             .forEach(className -> {
                                 try {
                                     Class<?> clazz = Class.forName(className);
+                                    if (!clazz.isAnnotationPresent(Bean.class)) {
+                                        throw new RuntimeException("Prozed: " + className + " not marked as Bean");
+                                    }
                                     beanedClasses.add(clazz);
                                     LOGGER.info("Prozed: registered module bean {}", className);
                                 } catch (ClassNotFoundException e) {
@@ -149,4 +192,5 @@ public final class ProzedContainer {
             throw new IllegalStateException("Prozed: failed to load module beans", e);
         }
     }
+
 }

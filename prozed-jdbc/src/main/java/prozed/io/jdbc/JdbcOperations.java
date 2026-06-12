@@ -1,6 +1,8 @@
 package prozed.io.jdbc;
 
 import org.apache.tomcat.jdbc.pool.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
 import prozed.io.jdbc.exception.JdbcOperationsException;
@@ -17,6 +19,7 @@ import static prozed.io.jdbc.utils.Constants.*;
 @Bean
 public class JdbcOperations {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JdbcOperations.class);
     private final DataSource pool;
     private final ThreadLocal<Connection> txConnection = new ThreadLocal<>();
 
@@ -104,6 +107,13 @@ public class JdbcOperations {
             }
             return null;
         }, params);
+    }
+
+    public void preDestroy() {
+        LOGGER.info("Destroying JdbcOperations");
+        if (this.pool != null) {
+            this.pool.close();
+        }
     }
 
     protected Connection borrow() throws SQLException {

@@ -1,4 +1,3 @@
-1. Rollback in tests
+1. scan jars
 2. expose `JdbcOperations` in tests
-3. TestPropertiesReader
-4. JMS
+3. JMS

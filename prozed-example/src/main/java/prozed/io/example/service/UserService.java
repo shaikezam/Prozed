@@ -1,17 +1,26 @@
 package prozed.io.example.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
 import prozed.io.example.repository.UserRepository;
+import prozed.io.jms.JmsOperations;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Bean
 public class UserService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+
     @Inject
     private UserRepository userRepository;
+    @Inject
+    private JmsOperations jmsOperations;
 
     public Optional<User> getUser(int id) {
         return Optional.ofNullable(userRepository.getUser(id));
@@ -19,7 +28,6 @@ public class UserService {
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
-
         return userRepository.createUsers(user);
     }
 

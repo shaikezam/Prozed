@@ -1,4 +1,4 @@
-package prozed.io.jdbc;
+package prozed.io.jdbc.internal;
 
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
+import prozed.io.jdbc.JdbcOperations;
 
 import static prozed.io.jdbc.utils.Constants.*;
 
@@ -17,7 +18,7 @@ public class FlywayMigration {
     @Inject
     private JdbcOperations jdbcOperations;
 
-    public void init() {
+    public void preInit() {
         if (!Boolean.parseBoolean(ProzedPropertiesWrapper.getProperty(FLYWAY_ENABLED, "false"))) {
             logger.info("Flyway migration disabled");
             return;

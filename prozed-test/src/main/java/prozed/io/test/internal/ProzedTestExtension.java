@@ -59,11 +59,9 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
             serverThread.start();
 
             waitForServer(Integer.parseInt(TestPropertiesReader.getProperty("web.service.port")));
-            //Thread.sleep(2000);
         } catch (Exception e) {
-            int i = 1;
-        } finally {
-            interrupt(serverThread);
+            LOGGER.error("Failed to start Prozed server in test", e);
+            throw e;
         }
 
         context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(SERVER_THREAD_KEY, serverThread);
@@ -111,6 +109,14 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
                 .get(SERVER_THREAD_KEY);
 
         interrupt(serverThread);
+        try {
+            Class<?> prozedServerClass = Class.forName(SERVER_CLASS);
+            Method resetMethod = prozedServerClass.getMethod("resetContainer");
+            resetMethod.invoke(null);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to reset ProzedServer.CONTAINER", e);
+
+        }
     }
 
     private static void interrupt(Thread serverThread) {

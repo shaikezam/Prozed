@@ -32,7 +32,7 @@ public class JdbcOperations {
     }
 
     public <T> T inTransaction(JdbcCallback<T> work) {
-        if (txConnection.get() == null) {
+        if (txConnection.get() != null) {
             try {
                 return work.run(txConnection.get());
             } catch (SQLException e) {

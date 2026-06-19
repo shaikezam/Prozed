@@ -11,6 +11,7 @@ import prozed.io.core.internal.reflection.PackageScanner;
 import prozed.io.jms.api.DestinationType;
 import prozed.io.jms.api.Listener;
 
+import java.lang.IllegalStateException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,10 +45,18 @@ public class JmsRegistry {
         Set<Class<?>> listeners = packageScanner.scan(packageToScan, Listener.class);
         listeners.forEach(listener -> {
             Listener annotation = listener.getAnnotation(Listener.class);
+            Object listenerInstance = prozedContainer.get(listener);
+
+            if (listenerInstance == null) {
+                throw new IllegalStateException(
+                        "Listener " + listener.getName() + " must be marked with @Bean"
+                );
+            }
+
             try {
-                this.registerListener(prozedContainer.get(listener), annotation.destination(), annotation.destinationType());
+                this.registerListener(listenerInstance, annotation.destination(), annotation.destinationType());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to register listener " + listener.getName(), e);
             }
         });
     }

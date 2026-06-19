@@ -15,6 +15,8 @@ import prozed.io.core.internal.web.NodeRouter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -53,13 +55,25 @@ public class DispatcherServlet extends HttpServlet {
         Map<String, String> queryParams = getQueryParam(req.getQueryString());
 
         // 2. Lookup the route in the Radix Tree
-        // TODO normalize path
         try {
-            NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(HttpMethod.fromString(method), path, queryParams);
+            HttpMethod httpMethod;
+            try {
+                httpMethod = HttpMethod.fromString(method);
+            } catch (IllegalArgumentException e) {
+                throw new HttpException(method + " method not supported", HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            }
+            NodeExecutorWrapper nodeExecutorWrapper = nodeRouter.lookup(httpMethod, path, queryParams);
             Object controller = this.prozedContainer.get(nodeExecutorWrapper.method().getDeclaringClass());
+            String payload = "";
+            if (HttpMethod.requirePayload(httpMethod)) {
+                if (req.getCharacterEncoding() == null) {
+                    req.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                }
+                payload = req.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+            }
             Object result = nodeExecutorWrapper.execute(
                     controller,
-                    req.getReader().lines().collect(Collectors.joining(System.lineSeparator())),
+                    payload,
                     this.gson);
             if (result != null) {
                 Method handlerMethod = nodeExecutorWrapper.method();
@@ -77,9 +91,7 @@ public class DispatcherServlet extends HttpServlet {
             if ((e instanceof InvocationTargetException ? e.getCause() : e) instanceof HttpException exception) {
                 resp.setStatus(exception.getHttpCode());
                 resp.setContentType(ContentType.APPLICATION_JSON.value());
-                resp.getWriter().write("""
-                                {"error": "%s"}
-                        """.formatted(e.getMessage()));
+                resp.getWriter().write(gson.toJson(Map.of("error", exception.getMessage())));
             } else {
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
@@ -117,9 +129,17 @@ public class DispatcherServlet extends HttpServlet {
         }
         String[] queries = query.split("&");
         Stream.of(queries)
+                .filter(param -> !param.isBlank())
                 .forEach(param -> {
-                    String[] parts = param.split("=");
-                    queryParams.put(parts[0], parts.length > 1 ? parts[1] : "");
+                    String[] parts = param.split("=", 2);
+                    String key = URLDecoder.decode(parts[0], StandardCharsets.UTF_8);
+                    if (key.isBlank()) {
+                        return;
+                    }
+                    String value = parts.length > 1
+                            ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8)
+                            : "";
+                    queryParams.put(key, value);
                 });
         return queryParams;
     }

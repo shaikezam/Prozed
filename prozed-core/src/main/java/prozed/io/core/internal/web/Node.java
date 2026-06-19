@@ -55,4 +55,8 @@ final public class Node {
     public boolean isHandlerExists(HttpMethod httpMethod) {
         return handlers.containsKey(httpMethod);
     }
+
+    public boolean hasAnyHandler() {
+        return !handlers.isEmpty();
+    }
 }

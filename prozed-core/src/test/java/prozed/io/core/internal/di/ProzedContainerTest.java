@@ -58,6 +58,16 @@ class ProzedContainerTest {
     }
 
     @Test
+    void testIndirectcirculardependencywithemptyrootThrowsException() {
+        // given & when & then
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+                    container.init("prozed.io.core.internal.di.indirectcirculardependencywithemptyroot");
+                }
+        );
+        assertTrue(exception.getMessage().contains("Cycle detected"));
+    }
+
+    @Test
     void testContainerResolvesValidDependencyChain() {
         // given & when
         container.init("prozed.io.core.internal.di.container");

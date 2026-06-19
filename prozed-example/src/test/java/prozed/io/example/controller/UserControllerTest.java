@@ -1,5 +1,6 @@
 package prozed.io.example.controller;
 
+import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 import prozed.io.example.model.User;
 import prozed.io.example.model.UserBuilder;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class UserControllerTest {
 
     private final HttpClientOperations httpClient = HttpClientOperations.createDefault(8081, "/");
+    private final Gson gson = new Gson();
 
     @Test
     void testGetUser() throws Exception {
@@ -73,7 +75,7 @@ public class UserControllerTest {
                         .build(),
                 new UserBuilder()
                         .build());
-        String jsonBody = new com.google.gson.Gson().toJson(users);
+        String jsonBody = gson.toJson(users);
 
         HttpRequest request = httpClient.request("/users")
                 .header("Content-Type", "application/json")
@@ -92,7 +94,7 @@ public class UserControllerTest {
                 .withId(1)
                 .withName("UpdatedAlice")
                 .build();
-        String jsonBody = new com.google.gson.Gson().toJson(updated);
+        String jsonBody = gson.toJson(updated);
 
         // when
         HttpResponse<String> updateResponse = httpClient.send(
@@ -130,6 +132,65 @@ public class UserControllerTest {
         // then
         assertEquals(200, deleteResponse.statusCode());
         assertEquals(404, getResponse.statusCode());
+    }
+
+    @Test
+    void testUnicodeRoundTrip() throws Exception {
+        // given
+        String unicodeName = "José 北京 😀";
+        String jsonBody = gson.toJson(new User(1, unicodeName));
+
+        // when
+        HttpResponse<String> updateResponse = httpClient.send(
+                httpClient.request("/user/1")
+                        .header("Content-Type", "application/json")
+                        .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, updateResponse.statusCode());
+        DeserializedResponse<User> getResponse = httpClient.sendAndDeserializeWithResponse(
+                httpClient
+                        .request("/user/1")
+                        .GET()
+                        .build(), User.class);
+
+        // then
+        assertEquals(200, getResponse.statusCode());
+        assertTrue(getResponse.headers().firstValue("content-type").orElse("")
+                .toLowerCase().contains("charset=utf-8"));
+        assertEquals(unicodeName, getResponse.body().name());
+    }
+
+    @Test
+    void testSearchUsersByName() throws Exception {
+        // given
+        HttpRequest request = httpClient.request("/users/search?name=Bob&limit=10")
+                .GET()
+                .build();
+
+        // when
+        DeserializedResponse<User[]> response = httpClient.sendAndDeserializeWithResponse(request, User[].class);
+
+        // then
+        assertEquals(200, response.statusCode());
+        assertEquals(1, response.body().length);
+        assertEquals("Bob", response.body()[0].name());
+    }
+
+    @Test
+    void testSearchUsersWithoutLimit() throws Exception {
+        // given
+        HttpRequest request = httpClient.request("/users/search?name=Bob")
+                .GET()
+                .build();
+
+        // when
+        DeserializedResponse<User[]> response = httpClient.sendAndDeserializeWithResponse(request, User[].class);
+
+        // then
+        assertEquals(200, response.statusCode());
+        assertEquals(1, response.body().length);
+        assertEquals("Bob", response.body()[0].name());
     }
 
     @Test

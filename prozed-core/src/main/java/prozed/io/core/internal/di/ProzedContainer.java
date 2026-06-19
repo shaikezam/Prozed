@@ -21,7 +21,7 @@ public final class ProzedContainer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProzedContainer.class);
     private final Map<Class<?>, Object> beansMapping = new ConcurrentHashMap<>();
     private final Set<Class<?>> injectedClasses = new HashSet<>();
-    private final Set<Class<?>> processed = new HashSet<>();
+    private final Set<Class<?>> processed = new LinkedHashSet<>();
     private final Set<Class<?>> visiting = new HashSet<>();
     private final Set<Class<?>> beanedClasses = new HashSet<>();
     private final PackageScanner packageScanner = new PackageScanner();
@@ -48,27 +48,37 @@ public final class ProzedContainer {
     }
 
     public void preDestroy() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+        List<Class<?>> beans = new ArrayList<>(processed);
+        Collections.reverse(beans);
+        for (Class<?> clazz : beans) {
+            Object bean = beansMapping.get(clazz);
+            if (bean == null) continue;
+
             try {
-                Method init = entry.getKey().getDeclaredMethod("preDestroy");
-                init.invoke(entry.getValue());
+                Method init = clazz.getDeclaredMethod("preDestroy");
+                init.invoke(bean);
             } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
+                // no preDestroy, that's fine
             } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call preDestroy() on " + entry.getKey().getName(), e);
+                throw new RuntimeException("Prozed: Failed to call preDestroy() on " + clazz.getName(), e);
             }
         }
     }
 
     public void postDestroy() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+        List<Class<?>> beans = new ArrayList<>(processed);
+        Collections.reverse(beans);
+        for (Class<?> clazz : beans) {
+            Object bean = beansMapping.get(clazz);
+            if (bean == null) continue;
+
             try {
-                Method init = entry.getKey().getDeclaredMethod("postDestroy");
-                init.invoke(entry.getValue());
+                Method init = clazz.getDeclaredMethod("postDestroy");
+                init.invoke(bean);
             } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
+                // no postDestroy, that's fine
             } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + entry.getKey().getName(), e);
+                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + clazz.getName(), e);
             }
         }
     }
@@ -108,9 +118,6 @@ public final class ProzedContainer {
     }
 
     private void buildDependencyTree() {
-        if (beanedClasses.containsAll(injectedClasses) && injectedClasses.containsAll(beanedClasses)) {
-            throw new IllegalStateException("Cycle detected");
-        }
         List<Class<?>> allRootBeans = beanedClasses
                 .stream()
                 .filter(c -> !injectedClasses.contains(c))
@@ -119,6 +126,16 @@ public final class ProzedContainer {
             if (!processed.contains(root)) {
                 buildTree(root);
             }
+        }
+        for (Class<?> bean : beanedClasses) {
+            if (!processed.contains(bean)) {
+                buildTree(bean);
+            }
+        }
+        if (processed.size() != beanedClasses.size()) {
+            Set<Class<?>> missed = new HashSet<>(beanedClasses);
+            missed.removeAll(processed);
+            throw new IllegalStateException("Beans not instantiated (unreachable cycle?): " + missed);
         }
     }
 

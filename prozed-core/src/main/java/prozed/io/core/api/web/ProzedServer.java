@@ -17,6 +17,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ProzedServer implements Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProzedServer.class);
@@ -24,9 +25,13 @@ public class ProzedServer implements Closeable {
     private final Tomcat tomcat;
     private static ProzedContainer CONTAINER = new ProzedContainer();
     private final Map<String, FilterWrapper> filters = new HashMap<>();
+    private final AtomicBoolean closed = new AtomicBoolean(false);
 
     public static ProzedContainer getContainer() {
         return CONTAINER;
+    }
+    public static void resetContainer() {
+        CONTAINER = new ProzedContainer();
     }
 
     public ProzedServer() {
@@ -52,9 +57,13 @@ public class ProzedServer implements Closeable {
 
     @Override
     public void close() {
+        if (!closed.compareAndSet(false, true)) {
+            return;
+        }
         try {
             if (tomcat.getServer() != null && tomcat.getServer().getState().isAvailable()) {
                 getContainer().preDestroy();
+                getContainer().postDestroy();
                 tomcat.stop();
                 tomcat.destroy();
                 LOGGER.info("ProzedServer shut down successfully.");

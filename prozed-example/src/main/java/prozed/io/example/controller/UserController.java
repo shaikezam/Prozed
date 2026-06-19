@@ -44,6 +44,11 @@ public class UserController {
         userService.deleteUser(id);
     }
 
+    @GetRequest(value = "/users/search")
+    public List<User> searchUsers(@QueryParam("name") String name, @QueryParam("limit") Integer limit) {
+        return userService.search(name, limit);
+    }
+
     @GetRequest(value = "/health", produces = ContentType.TEXT_PLAIN)
     public String health() {
         return "OK";

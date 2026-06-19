@@ -1,9 +1,18 @@
 package prozed.io.core.internal.reflection;
 
+import jakarta.servlet.http.HttpServletResponse;
+import prozed.io.core.internal.web.HttpException;
+
 public class TypeConvertor {
 
     @SuppressWarnings("unchecked")
     public static <T> T convert(String value, Class<T> type) {
+        if (value == null) {
+            if (type.isPrimitive()) {
+                throw new HttpException("Missing required param", HttpServletResponse.SC_BAD_REQUEST);
+            }
+            return null;
+        }
         if (Integer.class.equals(type) || int.class.equals(type)) {
             return (T) Integer.valueOf(value);
         } else if (Double.class.equals(type) || double.class.equals(type)) {
@@ -15,6 +24,9 @@ public class TypeConvertor {
         } else if (Boolean.class.equals(type) || boolean.class.equals(type)) {
             return (T) Boolean.valueOf(value);
         } else if (Character.class.equals(type) || char.class.equals(type)) {
+            if (value.isEmpty()) {
+                throw new HttpException("Character parameter cannot be empty", HttpServletResponse.SC_BAD_REQUEST);
+            }
             return (T) Character.valueOf(value.charAt(0));
         } else if (String.class.equals(type)) {
             return (T) value;

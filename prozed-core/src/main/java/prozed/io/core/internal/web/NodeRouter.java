@@ -4,7 +4,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.HttpMethod;
+import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
+import prozed.io.core.api.web.QueryParam;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -24,6 +26,7 @@ final public class NodeRouter {
 
     public void addRoute(String path, Method handler, HttpMethod method) {
         validatePayloadParamCount(handler);
+        validateAllParamsBound(handler);
         Node current = root;
         String[] segments = path.split("/");
         int currentSegmentIndex = 0;
@@ -39,7 +42,6 @@ final public class NodeRouter {
             }
         }
         buildSubTreeForAddingRoute(path, segments, currentSegmentIndex, current, handler, method);
-        int i = 1;
     }
 
     public NodeExecutorWrapper lookup(HttpMethod method, String path, Map<String, String> queryParams) throws HttpException {
@@ -67,9 +69,13 @@ final public class NodeRouter {
         }
         Optional<Method> handler = current.getHandler(method);
         if (handler.isEmpty()) {
-            String errorMessage = "%s method not found for path %s".formatted(method, path);
-            logger.error(errorMessage);
-            throw new HttpException(errorMessage, HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            int code = current.hasAnyHandler()
+                    ? HttpServletResponse.SC_METHOD_NOT_ALLOWED
+                    : HttpServletResponse.SC_NOT_FOUND;
+            String msg = code == HttpServletResponse.SC_METHOD_NOT_ALLOWED
+                    ? "%s method not found for path %s".formatted(method, path)
+                    : "%s path not found".formatted(path);
+            throw new HttpException(msg, code);
         }
         return new NodeExecutorWrapper(pathParams, queryParams, handler.get());
     }
@@ -151,6 +157,22 @@ final public class NodeRouter {
                     .formatted(method.getDeclaringClass().getSimpleName(), method.getName(), payloadParamCount);
             logger.error(errorMessage);
             throw new IllegalStateException(errorMessage);
+        }
+
+    }
+
+    private void validateAllParamsBound(Method method) {
+        for (Parameter parameter : method.getParameters()) {   // empty for health() -> no-op
+            boolean bound = parameter.isAnnotationPresent(PathParam.class)
+                    || parameter.isAnnotationPresent(QueryParam.class)
+                    || parameter.isAnnotationPresent(PayloadParam.class);
+            if (!bound) {
+                String errorMessage = "Unbound parameter '%s' in %s.%s — add @PathParam, @QueryParam, or @PayloadParam"
+                        .formatted(parameter.getName(),
+                                method.getDeclaringClass().getSimpleName(), method.getName());
+                logger.error(errorMessage);
+                throw new IllegalStateException(errorMessage);
+            }
         }
 
     }

@@ -5,12 +5,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
+import prozed.io.core.api.web.ProzedServer;
 import prozed.io.core.internal.di.ProzedContainer;
 import prozed.io.core.internal.properties.ProzedPropertiesWrapper;
 import prozed.io.core.internal.reflection.PackageScanner;
 import prozed.io.jms.api.DestinationType;
 import prozed.io.jms.api.Listener;
 
+import java.lang.IllegalStateException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +24,6 @@ import static prozed.io.jms.utils.Constants.*;
 @Bean
 public class JmsRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(JmsRegistry.class);
-    private static final String SERVER_CLASS = "prozed.io.core.api.web.ProzedServer";
     private final List<Connection> connections = new ArrayList<>();
     private final ConnectionFactory connectionFactory;
     private final PackageScanner packageScanner = new PackageScanner();
@@ -35,19 +36,25 @@ public class JmsRegistry {
         );
     }
 
-    public void postInit() throws Exception {
+    public void postInit() {
         LOGGER.info("Initializing JmsRegistry");
-        Class<?> prozedServerClass = Class.forName(SERVER_CLASS);
-        Method getContainerMethod = prozedServerClass.getMethod("getContainer");
-        ProzedContainer prozedContainer = (ProzedContainer) getContainerMethod.invoke(null);
+        ProzedContainer prozedContainer = ProzedServer.getContainer();
         String packageToScan = ProzedPropertiesWrapper.getProperty(WEB_SERVICE_SCAN_PACKAGE);
         Set<Class<?>> listeners = packageScanner.scan(packageToScan, Listener.class);
         listeners.forEach(listener -> {
             Listener annotation = listener.getAnnotation(Listener.class);
+            Object listenerInstance = prozedContainer.get(listener);
+
+            if (!(listenerInstance instanceof MessageListener)) {
+                throw new IllegalStateException(
+                        "Listener " + listener.getName() + " must be marked with @Bean and implement jakarta.jms.MessageListener"
+                );
+            }
+
             try {
-                this.registerListener(prozedContainer.get(listener), annotation.destination(), annotation.destinationType());
+                this.registerListener(listenerInstance, annotation.destination(), annotation.destinationType());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to register listener " + listener.getName(), e);
             }
         });
     }

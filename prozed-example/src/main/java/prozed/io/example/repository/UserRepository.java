@@ -21,7 +21,13 @@ public class UserRepository {
                 id);
     }
 
-    public int createUsers(User user) {
+    public List<User> searchByName(String name, int limit) {
+        return jdbcOperations.select(
+                "select * from users where name like ? order by id limit ?", MAPPER,
+                "%" + name + "%", limit);
+    }
+
+    public int createUser(User user) {
         return jdbcOperations.update("INSERT INTO users (name) VALUES (?)", user.name());
     }
 

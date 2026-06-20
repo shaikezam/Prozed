@@ -21,7 +21,7 @@ public final class ProzedContainer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProzedContainer.class);
     private final Map<Class<?>, Object> beansMapping = new ConcurrentHashMap<>();
     private final Set<Class<?>> injectedClasses = new HashSet<>();
-    private final Set<Class<?>> processed = new HashSet<>();
+    private final Set<Class<?>> processed = new LinkedHashSet<>();
     private final Set<Class<?>> visiting = new HashSet<>();
     private final Set<Class<?>> beanedClasses = new HashSet<>();
     private final PackageScanner packageScanner = new PackageScanner();
@@ -35,40 +35,33 @@ public final class ProzedContainer {
     }
 
     private void postInit() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
-            try {
-                Method init = entry.getKey().getDeclaredMethod("postInit");
-                init.invoke(entry.getValue());
-            } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
-            } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call postInit() on " + entry.getKey().getName(), e);
-            }
-        }
+        invokeHook("postInit", false);
     }
 
     public void preDestroy() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
-            try {
-                Method init = entry.getKey().getDeclaredMethod("preDestroy");
-                init.invoke(entry.getValue());
-            } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
-            } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call preDestroy() on " + entry.getKey().getName(), e);
-            }
-        }
+        invokeHook("preDestroy", true);
     }
 
     public void postDestroy() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
+        invokeHook("postDestroy", true);
+    }
+
+    private void invokeHook(String hookName, boolean reverse) {
+        List<Class<?>> beans = new ArrayList<>(processed);
+        if (reverse) {
+            Collections.reverse(beans);
+        }
+        for (Class<?> clazz : beans) {
+            Object bean = beansMapping.get(clazz);
+            if (bean == null) continue;
+
             try {
-                Method init = entry.getKey().getDeclaredMethod("postDestroy");
-                init.invoke(entry.getValue());
+                Method hook = clazz.getDeclaredMethod(hookName);
+                hook.invoke(bean);
             } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
+                // hook not declared, that's fine
             } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + entry.getKey().getName(), e);
+                throw new RuntimeException("Prozed: Failed to call " + hookName + "() on " + clazz.getName(), e);
             }
         }
     }
@@ -108,9 +101,6 @@ public final class ProzedContainer {
     }
 
     private void buildDependencyTree() {
-        if (beanedClasses.containsAll(injectedClasses) && injectedClasses.containsAll(beanedClasses)) {
-            throw new IllegalStateException("Cycle detected");
-        }
         List<Class<?>> allRootBeans = beanedClasses
                 .stream()
                 .filter(c -> !injectedClasses.contains(c))
@@ -119,6 +109,16 @@ public final class ProzedContainer {
             if (!processed.contains(root)) {
                 buildTree(root);
             }
+        }
+        for (Class<?> bean : beanedClasses) {
+            if (!processed.contains(bean)) {
+                buildTree(bean);
+            }
+        }
+        if (processed.size() != beanedClasses.size()) {
+            Set<Class<?>> missed = new HashSet<>(beanedClasses);
+            missed.removeAll(processed);
+            throw new IllegalStateException("Beans not instantiated (unreachable cycle?): " + missed);
         }
     }
 

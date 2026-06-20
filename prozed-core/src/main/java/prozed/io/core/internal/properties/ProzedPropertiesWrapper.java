@@ -12,11 +12,11 @@ public class ProzedPropertiesWrapper {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         try (InputStream in = cl.getResourceAsStream(PROZED_PROPERTIES)) {
             if (in == null) {
-                throw new IllegalArgumentException("Resource not found");
+                throw new IllegalArgumentException("Resource not found %s".formatted(PROZED_PROPERTIES));
             }
             PROPERTIES.load(in);
         } catch (Exception e) {
-            throw new IllegalStateException("properties file %s not found".formatted(PROZED_PROPERTIES));
+            throw new IllegalStateException("Prozed: failed to read %s file".formatted(PROZED_PROPERTIES), e);
         }
     }
 

@@ -1,18 +1,21 @@
 package prozed.io.core.api.web;
 
+import java.util.Arrays;
+import java.util.List;
+
 public enum HttpMethod {
-    GET("GET"),
-    POST("POST"),
-    PUT("PUT"),
-    DELETE("DELETE");
+    GET,
+    POST,
+    PUT,
+    DELETE;
 
-    private final String name;
-
-    HttpMethod(String name) {
-        this.name = name;
-    }
+    private static final List<HttpMethod> REQUIRED_PAYLOADS = Arrays.asList(POST, PUT);
 
     public static HttpMethod fromString(String name) {
         return valueOf(name.toUpperCase());
+    }
+
+    public static boolean requirePayload(HttpMethod httpMethod) {
+        return REQUIRED_PAYLOADS.contains(httpMethod);
     }
 }

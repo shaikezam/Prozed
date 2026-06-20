@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.core.api.web.*;
-import prozed.io.core.internal.web.HttpException;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.example.model.User;
 import prozed.io.example.service.UserService;
 
@@ -42,6 +42,11 @@ public class UserController {
     @DeleteRequest(value = "/user/{id}")
     public void deleteUser(@PathParam("{id}") int id) {
         userService.deleteUser(id);
+    }
+
+    @GetRequest(value = "/users/search")
+    public List<User> searchUsers(@QueryParam("name") String name, @QueryParam("limit") Integer limit) {
+        return userService.search(name, limit);
     }
 
     @GetRequest(value = "/health", produces = ContentType.TEXT_PLAIN)

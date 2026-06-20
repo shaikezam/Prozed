@@ -26,9 +26,14 @@ public class UserService {
         return Optional.ofNullable(userRepository.getUser(id));
     }
 
+    public List<User> search(String name, Integer limit) {
+        int max = (limit == null) ? 10 : limit;
+        return userRepository.searchByName(name == null ? "" : name, max);
+    }
+
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
-        return userRepository.createUsers(user);
+        return userRepository.createUser(user);
     }
 
     public void createUsers(List<User> users) {

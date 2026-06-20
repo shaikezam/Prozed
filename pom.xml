@@ -38,7 +38,6 @@
         <module>prozed-test</module>
         <module>prozed-jdbc</module>
         <module>prozed-jms</module>
-        <module>prozed-example</module>
     </modules>
 
     <dependencyManagement>
@@ -127,5 +126,20 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>with-example</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>prozed-example</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>release</id>
+        </profile>
+    </profiles>
 
 </project>

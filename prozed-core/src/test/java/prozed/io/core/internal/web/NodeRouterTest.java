@@ -1,15 +1,18 @@
 package prozed.io.core.internal.web;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.test.utils.ReflectionUtils;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -89,8 +92,75 @@ class NodeRouterTest {
         // then
     }
 
+    @Test
+    void testLookupPrefixNodeNo404() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "testMethod1", String.class);
+        router.addRoute("/user/{id}", method, HttpMethod.GET);
+
+        // when
+        HttpException ex = assertThrows(
+                HttpException.class,
+                () -> router.lookup(HttpMethod.GET, "/user", new HashMap<>())
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_NOT_FOUND, ex.getHttpCode());
+        assertTrue(ex.getMessage().contains("path not found"));
+    }
+
+    @Test
+    void testLookupWrongMethod405() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "testMethod1", String.class);
+        router.addRoute("/user", method, HttpMethod.POST);
+
+        // when
+        HttpException ex = assertThrows(
+                HttpException.class,
+                () -> router.lookup(HttpMethod.GET, "/user", new HashMap<>())
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_METHOD_NOT_ALLOWED, ex.getHttpCode());
+        assertTrue(ex.getMessage().contains("method not found"));
+    }
+
+    @Test
+    void testUnboundParam() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "unboundParamMethod", int.class);
+
+        // when
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> router.addRoute("/test", method, HttpMethod.GET)
+        );
+
+        // then
+        assertTrue(exception.getMessage().contains("Unbound parameter"));
+    }
+
+    @Test
+    void testZeroParamMethodIsValid() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "zeroParamMethod");
+
+        // when
+        router.addRoute("/health", method, HttpMethod.GET);
+
+        // then
+        assertNotNull(ReflectionUtils.getField(router, "root"));
+    }
+
     public void twoPayloadParamsMethod(@PayloadParam String param1, @PayloadParam String param2) {
 
+    }
+
+    public void unboundParamMethod(int page) {
+    }
+
+    public void zeroParamMethod() {
     }
 
     public void testMethod1(@PathParam("id") String id) {

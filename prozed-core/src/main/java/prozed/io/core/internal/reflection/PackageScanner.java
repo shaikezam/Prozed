@@ -5,9 +5,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.net.JarURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Optional;
@@ -28,14 +32,12 @@ public class PackageScanner {
 
             while (urls.hasMoreElements()) {
                 URL url = urls.nextElement();
-                String decodedUrl = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8);
 
-                if (decodedUrl.contains("!")) {
-                    // JAR file
-                    scanJar(decodedUrl, packageName, annotation, classes);
+                if ("jar".equals(url.getProtocol())) {
+                    scanJar(url, packageName, annotation, classes);
                 } else {
-                    // Directory (file system)
-                    scanDirectory(decodedUrl, packageName, annotation, classes);
+                    String decodedPath = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8);
+                    scanDirectory(decodedPath, packageName, annotation, classes);
                 }
             }
             return classes;
@@ -48,8 +50,9 @@ public class PackageScanner {
     private void scanDirectory(String dirPath, String packageName, Class<? extends Annotation> annotation, Set<Class<?>> classes) throws ClassNotFoundException {
         LOGGER.info("Scanning directory: {}", dirPath);
         File file = new File(dirPath);
-        if (file.exists() && file.listFiles() != null) {
-            for (File f : file.listFiles()) {
+        File[] files = file.listFiles();
+        if (file.exists() && files != null) {
+            for (File f : files) {
                 if (f.isDirectory()) {
                     scanDirectory(f.getAbsolutePath(), packageName + "." + f.getName(), annotation, classes);
                 } else if (f.getName().endsWith(CLASS)) {
@@ -59,35 +62,31 @@ public class PackageScanner {
         }
     }
 
-    private void scanJar(String jarPath, String packageName, Class<? extends Annotation> annotation, Set<Class<?>> classes) throws Exception {
-        LOGGER.info("Scanning jar: {}", jarPath);
-        String[] parts = jarPath.split("!");
-        String filePath = parts[0].replace("file:", "").replace("\\", "/");
-
-        try (JarFile jarFile = new JarFile(filePath)) {
-            Enumeration<JarEntry> entries = jarFile.entries();
+    private void scanJar(URL jarUrl, String packageName, Class<? extends Annotation> annotation, Set<Class<?>> classes) throws Exception {
+        LOGGER.info("Scanning jar: {}", jarUrl);
+        JarURLConnection conn = (JarURLConnection) jarUrl.openConnection();
+        try (JarFile jarFile = conn.getJarFile()) {
             String packagePath = packageName.replace('.', '/');
-
+            Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
-                JarEntry entry = entries.nextElement();
-                String entryName = entry.getName();
-
-                // match entries in this package
-                if (entryName.startsWith(packagePath) && entryName.endsWith(CLASS)) {
-                    String className = entryName
-                            .substring(0, entryName.length() - 6) // remove .class
-                            .replace('/', '.');
-
+                String entryName = entries.nextElement().getName();
+                if (isInPackage(entryName, packagePath) && entryName.endsWith(CLASS)) {
+                    String className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
                     try {
                         Class<?> clazz = Class.forName(className);
-                        if (clazz.isAnnotationPresent(annotation)) {
-                            classes.add(clazz);
-                        }
-                    } catch (ClassNotFoundException ignored) {
-                    }
+                        if (clazz.isAnnotationPresent(annotation)) classes.add(clazz);
+                    } catch (ClassNotFoundException ignored) {}
                 }
             }
         }
+    }
+
+    /**
+     * Prefix-matches a jar entry to a package. The trailing slash prevents a sibling
+     * package sharing a name prefix (e.g. {@code reflection2}) from matching {@code reflection}.
+     */
+    private boolean isInPackage(String entryName, String packagePath) {
+        return entryName.startsWith(packagePath + "/");
     }
 
     private Optional<Class<?>> loadClass(String packageName, String fileName, Class<? extends Annotation> annotation) throws ClassNotFoundException {

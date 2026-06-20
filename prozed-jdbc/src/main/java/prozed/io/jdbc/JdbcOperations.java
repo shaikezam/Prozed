@@ -32,7 +32,7 @@ public class JdbcOperations {
     }
 
     public <T> T inTransaction(JdbcCallback<T> work) {
-        if (txConnection.get() == null) {
+        if (txConnection.get() != null) {
             try {
                 return work.run(txConnection.get());
             } catch (SQLException e) {
@@ -49,7 +49,8 @@ public class JdbcOperations {
             return result;
         } catch (Exception e) {
             rollback(conn);
-            throw new JdbcOperationsException("Transaction roll back", e);
+            LOGGER.error("Transaction work failed", e);
+            throw new RuntimeException(e);
         } finally {
             txConnection.remove();
             restoreAutoCommitAndClose(conn);

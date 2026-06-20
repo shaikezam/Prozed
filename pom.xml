@@ -124,26 +124,6 @@
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>${maven-jar-plugin.version}</version>
                 </plugin>
-                <!--
-                  Runnable fat-jar baseline. A module only needs to declare this plugin
-                  and append a ManifestResourceTransformer with its own <mainClass>:
-
-                    <plugin>
-                      <groupId>org.apache.maven.plugins</groupId>
-                      <artifactId>maven-shade-plugin</artifactId>
-                      <configuration>
-                        <transformers combine.children="append">
-                          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>your.Main</mainClass>
-                          </transformer>
-                        </transformers>
-                      </configuration>
-                    </plugin>
-
-                  ServicesResourceTransformer below merges the per-module
-                  META-INF/services/prozed.io.core.api.di.Bean SPI files so jdbc+jms
-                  module beans all register; without it one clobbers the other.
-                -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>

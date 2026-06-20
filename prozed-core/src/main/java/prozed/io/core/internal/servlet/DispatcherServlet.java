@@ -89,16 +89,16 @@ public class DispatcherServlet extends HttpServlet {
         } catch (Exception e) {
             if ((e instanceof InvocationTargetException ? e.getCause() : e) instanceof HttpException exception) {
                 if (exception.is5xx()) {
-                    logger.error("Exception while dispatching request", e);
+                    logger.error("Exception while dispatching path {}", path, e);
                 } else {
-                    logger.debug("Exception while dispatching request", e);
-                    logger.info("4xx while dispatching request");
+                    logger.debug("Exception while dispatching path {}", path, e);
+                    logger.info("4xx while dispatching path {}", path);
                 }
                 resp.setStatus(exception.getHttpCode());
                 resp.setContentType(ContentType.APPLICATION_JSON.value());
                 resp.getWriter().write(gson.toJson(Map.of("error", exception.getMessage())));
             } else {
-
+                logger.debug("Exception while dispatching path {}", path, e);
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }

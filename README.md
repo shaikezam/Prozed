@@ -670,6 +670,8 @@ Each optional module ships a service-registration file at the **same path**:
             <phase>package</phase>
             <goals><goal>shade</goal></goals>
             <configuration>
+                <!-- don't emit dependency-reduced-pom.xml -->
+                <createDependencyReducedPom>false</createDependencyReducedPom>
                 <transformers>
                     <!-- sets Main-Class so `java -jar` works -->
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">

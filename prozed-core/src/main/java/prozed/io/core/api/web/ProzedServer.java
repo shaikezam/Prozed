@@ -15,7 +15,7 @@ import prozed.io.core.internal.web.NodeRouter;
 
 import java.io.Closeable;
 import java.io.File;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,12 +24,13 @@ public class ProzedServer implements Closeable {
 
     private final Tomcat tomcat;
     private static ProzedContainer CONTAINER = new ProzedContainer();
-    private final Map<String, FilterWrapper> filters = new HashMap<>();
+    private final Map<String, FilterWrapper> filters = new LinkedHashMap<>();
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
     public static ProzedContainer getContainer() {
         return CONTAINER;
     }
+
     public static void resetContainer() {
         CONTAINER = new ProzedContainer();
     }

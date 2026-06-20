@@ -15,7 +15,7 @@ public class TestPropertiesReader {
             }
             PROPERTIES.load(in);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to load prozed.properties");
+            throw new IllegalStateException("Failed to load prozed.properties", e);
         }
     }
 

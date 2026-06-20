@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;

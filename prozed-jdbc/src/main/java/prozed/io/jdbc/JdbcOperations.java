@@ -49,7 +49,8 @@ public class JdbcOperations {
             return result;
         } catch (Exception e) {
             rollback(conn);
-            throw new JdbcOperationsException("Transaction roll back", e);
+            LOGGER.error("Transaction work failed", e);
+            throw new RuntimeException(e);
         } finally {
             txConnection.remove();
             restoreAutoCommitAndClose(conn);

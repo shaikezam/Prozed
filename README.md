@@ -349,6 +349,8 @@ public class UserService {
 
 Add any of these **`public`, no-argument** methods to a bean and Prozed will call them at the right time. They are matched by name (no annotation needed); if absent, they're skipped.
 
+> ⚠️ Hooks must be declared **directly on the bean class**. Methods inherited from a superclass or interface are **not** invoked, and a non-`public` or argument-taking method of the same name is silently ignored.
+
 | Method | When |
 | --- | --- |
 | `preInit()` | After the bean's `@Inject` dependencies are wired |

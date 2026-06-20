@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import prozed.io.core.internal.web.HttpException;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.test.utils.RandomUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -307,6 +307,94 @@ class TypeConvertorTest {
 
         // then
         assertNull(actual);
+    }
+
+    @Test
+    void testConvertInvalidIntThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", int.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidIntegerThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", Integer.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidLongThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", long.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidLongBoxedThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", Long.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidDoubleThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", double.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidDoubleBoxedThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", Double.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidFloatThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", float.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
+    }
+
+    @Test
+    void testConvertInvalidFloatBoxedThrows400() {
+        // when
+        HttpException ex = assertThrows(HttpException.class, () ->
+            TypeConvertor.convert("abc", Float.class)
+        );
+
+        // then
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, ex.getHttpCode());
     }
 
     @Test

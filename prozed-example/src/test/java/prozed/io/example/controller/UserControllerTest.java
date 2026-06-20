@@ -39,6 +39,28 @@ public class UserControllerTest {
     }
 
     @Test
+    void testGetUserInvalidIdReturns400() throws Exception {
+        HttpRequest request = httpClient.request("/user/abc")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(400, response.statusCode());
+    }
+
+    @Test
+    void testGetUserNotFoundReturns404() throws Exception {
+        HttpRequest request = httpClient.request("/user/99999")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(404, response.statusCode());
+    }
+
+    @Test
     void testHealth() throws Exception {
         HttpRequest request = httpClient.request("/health")
                 .GET()

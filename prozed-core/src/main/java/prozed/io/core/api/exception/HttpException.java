@@ -1,4 +1,4 @@
-package prozed.io.core.internal.web;
+package prozed.io.core.api.exception;
 
 
 public class HttpException extends RuntimeException {
@@ -16,5 +16,9 @@ public class HttpException extends RuntimeException {
 
     public int getHttpCode() {
         return httpCode;
+    }
+
+    public boolean is5xx() {
+        return httpCode >= 500 && httpCode < 600;
     }
 }

@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.web.*;
 import prozed.io.core.internal.di.ProzedContainer;
-import prozed.io.core.internal.web.HttpException;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.internal.web.NodeExecutorWrapper;
 import prozed.io.core.internal.web.NodeRouter;
 
@@ -87,12 +87,18 @@ public class DispatcherServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            logger.error("Exception while dispatching request", e);
             if ((e instanceof InvocationTargetException ? e.getCause() : e) instanceof HttpException exception) {
+                if (exception.is5xx()) {
+                    logger.error("Exception while dispatching request", e);
+                } else {
+                    logger.debug("Exception while dispatching request", e);
+                    logger.info("4xx while dispatching request");
+                }
                 resp.setStatus(exception.getHttpCode());
                 resp.setContentType(ContentType.APPLICATION_JSON.value());
                 resp.getWriter().write(gson.toJson(Map.of("error", exception.getMessage())));
             } else {
+
                 resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         }

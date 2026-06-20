@@ -35,50 +35,33 @@ public final class ProzedContainer {
     }
 
     private void postInit() {
-        for (Map.Entry<Class<?>, Object> entry : beansMapping.entrySet()) {
-            try {
-                Method init = entry.getKey().getDeclaredMethod("postInit");
-                init.invoke(entry.getValue());
-            } catch (NoSuchMethodException ignored) {
-                // no postInit method, that's fine
-            } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call postInit() on " + entry.getKey().getName(), e);
-            }
-        }
+        invokeHook("postInit", false);
     }
 
     public void preDestroy() {
-        List<Class<?>> beans = new ArrayList<>(processed);
-        Collections.reverse(beans);
-        for (Class<?> clazz : beans) {
-            Object bean = beansMapping.get(clazz);
-            if (bean == null) continue;
-
-            try {
-                Method init = clazz.getDeclaredMethod("preDestroy");
-                init.invoke(bean);
-            } catch (NoSuchMethodException ignored) {
-                // no preDestroy, that's fine
-            } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call preDestroy() on " + clazz.getName(), e);
-            }
-        }
+        invokeHook("preDestroy", true);
     }
 
     public void postDestroy() {
+        invokeHook("postDestroy", true);
+    }
+
+    private void invokeHook(String hookName, boolean reverse) {
         List<Class<?>> beans = new ArrayList<>(processed);
-        Collections.reverse(beans);
+        if (reverse) {
+            Collections.reverse(beans);
+        }
         for (Class<?> clazz : beans) {
             Object bean = beansMapping.get(clazz);
             if (bean == null) continue;
 
             try {
-                Method init = clazz.getDeclaredMethod("postDestroy");
-                init.invoke(bean);
+                Method hook = clazz.getDeclaredMethod(hookName);
+                hook.invoke(bean);
             } catch (NoSuchMethodException ignored) {
-                // no postDestroy, that's fine
+                // hook not declared, that's fine
             } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call postDestroy() on " + clazz.getName(), e);
+                throw new RuntimeException("Prozed: Failed to call " + hookName + "() on " + clazz.getName(), e);
             }
         }
     }

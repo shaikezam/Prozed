@@ -70,7 +70,7 @@ public class PackageScanner {
             Enumeration<JarEntry> entries = jarFile.entries();
             while (entries.hasMoreElements()) {
                 String entryName = entries.nextElement().getName();
-                if (entryName.startsWith(packagePath) && entryName.endsWith(CLASS)) {
+                if (isInPackage(entryName, packagePath) && entryName.endsWith(CLASS)) {
                     String className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
                     try {
                         Class<?> clazz = Class.forName(className);
@@ -79,6 +79,14 @@ public class PackageScanner {
                 }
             }
         }
+    }
+
+    /**
+     * Prefix-matches a jar entry to a package. The trailing slash prevents a sibling
+     * package sharing a name prefix (e.g. {@code reflection2}) from matching {@code reflection}.
+     */
+    private boolean isInPackage(String entryName, String packagePath) {
+        return entryName.startsWith(packagePath + "/");
     }
 
     private Optional<Class<?>> loadClass(String packageName, String fileName, Class<? extends Annotation> annotation) throws ClassNotFoundException {

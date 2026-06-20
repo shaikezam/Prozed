@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
 import prozed.io.core.api.web.*;
-import prozed.io.core.internal.web.HttpException;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.example.model.User;
 import prozed.io.example.service.UserService;
 

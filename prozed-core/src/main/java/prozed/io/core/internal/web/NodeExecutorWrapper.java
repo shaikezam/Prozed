@@ -2,6 +2,7 @@ package prozed.io.core.internal.web;
 
 import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletResponse;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;
 import prozed.io.core.api.web.QueryParam;

@@ -3,6 +3,7 @@ package prozed.io.core.internal.web;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.api.web.HttpMethod;
 import prozed.io.core.api.web.PathParam;
 import prozed.io.core.api.web.PayloadParam;

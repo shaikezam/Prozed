@@ -658,26 +658,47 @@ Use the **Maven Shade plugin** or **Gradle Shadow** to produce a single flat jar
 Each optional module ships a service-registration file at the **same path**:
 `META-INF/services/prozed.io.core.api.di.Bean`. When you shade multiple modules into one jar, the build will **overwrite** these files unless you tell it to **merge** them — and if it does, `JdbcOperations` / `JmsRegistry` silently disappear and you'll get startup failures that don't reproduce in your IDE.
 
-**Maven Shade — add the `ServicesResourceTransformer`:**
+**Maven Shade — full runnable-jar config:**
 
 ```xml
 <plugin>
     <groupId>org.apache.maven.plugins</groupId>
     <artifactId>maven-shade-plugin</artifactId>
+    <version>3.6.2</version>
     <executions>
         <execution>
             <phase>package</phase>
             <goals><goal>shade</goal></goals>
             <configuration>
                 <transformers>
+                    <!-- sets Main-Class so `java -jar` works -->
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                        <mainClass>com.example.Main</mainClass>
+                    </transformer>
                     <!-- merges META-INF/services/* instead of overwriting -->
                     <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                 </transformers>
+                <filters>
+                    <filter>
+                        <artifact>*:*</artifact>
+                        <excludes>
+                            <!-- JPMS descriptors are meaningless in a flat uber-jar -->
+                            <exclude>module-info.class</exclude>
+                            <exclude>META-INF/versions/*/module-info.class</exclude>
+                            <!-- drop signed-jar signatures, else SecurityException at startup -->
+                            <exclude>META-INF/*.SF</exclude>
+                            <exclude>META-INF/*.DSA</exclude>
+                            <exclude>META-INF/*.RSA</exclude>
+                        </excludes>
+                    </filter>
+                </filters>
             </configuration>
         </execution>
     </executions>
 </plugin>
 ```
+
+> Without the `ManifestResourceTransformer`, the jar has no `Main-Class` and `java -jar` fails with *"no main manifest attribute"*. The `filters` silence the common `module-info.class` shading warning and prevent a signed transitive dependency (e.g. via ActiveMQ) from triggering `SecurityException: Invalid signature file digest` at startup. Overlapping `META-INF/LICENSE`/`NOTICE` warnings are cosmetic — exclude them too if you want a clean build log.
 
 **Gradle Shadow:**
 
@@ -717,11 +738,17 @@ cd Prozed
 mvn clean install
 ```
 
-Run the example app:
+Run the example app as a self-contained runnable jar:
 
 ```bash
-mvn -pl prozed-example exec:java -Dexec.mainClass=prozed.io.example.Main
+# build the example (and the modules it depends on) into one fat jar
+mvn -pl prozed-example -am clean package
+
+# run it — no Maven needed at runtime
+java -jar prozed-example/target/prozed-example-1.0-SNAPSHOT.jar
 ```
+
+`prozed-example` configures the Shade plugin (see [Packaging & Deployment](#packaging--deployment)), so `package` emits a runnable uber-jar with the module service files merged.
 
 Requires JDK 17+ and Maven 3.9+.
 

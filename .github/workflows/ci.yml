@@ -38,15 +38,12 @@ jobs:
       - name: Run Maven clean install
         run: mvn clean install -B -V
 
-      - name: Scan dependencies for vulnerabilities (Trivy)
-        uses: aquasecurity/trivy-action@0.28.0
+      - name: Scan dependencies for vulnerabilities (OSV-Scanner)
+        uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
         with:
-          scan-type: fs
-          scan-ref: .
-          scanners: vuln
-          severity: CRITICAL,HIGH
-          exit-code: '1'          # fail the build on a finding
-          ignore-unfixed: true    # skip vulns with no fix available yet
+          scan-args: |-
+            --recursive
+            ./
 
       - name: Publish Test Results
         uses: actions/upload-artifact@v4

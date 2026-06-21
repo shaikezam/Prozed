@@ -7,18 +7,19 @@ on:
 
 permissions:
   contents: read
-  actions: read
-  checks: write
-  security-events: write   # upload OSV SARIF to the Security tab (Code scanning)
 
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+
     strategy:
       matrix:
         java-version: [ 17 ]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -39,6 +40,36 @@ jobs:
       - name: Run Maven clean install
         run: mvn clean install -B -V
 
+      - name: Publish Test Results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-java-${{ matrix.java-version }}
+          path: |
+            **/target/surefire-reports/
+            **/target/failsafe-reports/
+
+      - name: Test Report
+        uses: dorny/test-reporter@v1.9.1
+        # Skip on fork PRs: GitHub forces a read-only token there, so the Checks
+        # API call 403s. Runs on push and same-repo PRs.
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
+        with:
+          name: Maven Tests (Java ${{ matrix.java-version }})
+          path: '**/target/surefire-reports/TEST-*.xml'
+          reporter: java-junit
+          fail-on-empty: false
+
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # upload OSV SARIF to the Security tab (Code scanning)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Scan dependencies for vulnerabilities (OSV-Scanner)
         id: osv
         continue-on-error: true        # capture the result; the gate step below fails the job
@@ -53,6 +84,7 @@ jobs:
 
       - name: Upload OSV results to code scanning
         uses: github/codeql-action/upload-sarif@v3
+        # Skip on fork PRs: read-only token can't write security-events (403).
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
         with:
           sarif_file: osv.sarif
@@ -63,21 +95,3 @@ jobs:
         run: |
           echo "::error::OSV-Scanner found known vulnerabilities. See the Security tab (Code scanning) or the OSV-Scanner step log above."
           exit 1
-
-      - name: Publish Test Results
-        uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: test-results-java-${{ matrix.java-version }}
-          path: |
-            **/target/surefire-reports/
-            **/target/failsafe-reports/
-
-      - name: Test Report
-        uses: dorny/test-reporter@v1.9.1
-        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) }}
-        with:
-          name: Maven Tests (Java ${{ matrix.java-version }})
-          path: '**/target/surefire-reports/TEST-*.xml'
-          reporter: java-junit
-          fail-on-empty: false

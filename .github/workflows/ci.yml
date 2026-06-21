@@ -46,7 +46,7 @@ jobs:
             --recursive
             --no-resolve
             --format=sarif
-            --output=osv.sarif
+            --output-file=osv.sarif
             ./
 
       - name: Upload OSV results to code scanning

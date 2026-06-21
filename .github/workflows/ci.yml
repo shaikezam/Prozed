@@ -40,6 +40,8 @@ jobs:
         run: mvn clean install -B -V
 
       - name: Scan dependencies for vulnerabilities (OSV-Scanner)
+        id: osv
+        continue-on-error: true        # capture the result; the gate step below fails the job
         uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
         with:
           scan-args: |-
@@ -55,6 +57,12 @@ jobs:
         with:
           sarif_file: osv.sarif
           category: osv-scanner
+
+      - name: Fail the build if vulnerabilities were found
+        if: ${{ steps.osv.outcome == 'failure' }}
+        run: |
+          echo "::error::OSV-Scanner found known vulnerabilities. See the Security tab (Code scanning) or the OSV-Scanner step log above."
+          exit 1
 
       - name: Publish Test Results
         uses: actions/upload-artifact@v4

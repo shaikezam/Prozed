@@ -93,7 +93,7 @@
                 <artifactId>activemq-broker</artifactId>
                 <version>${activemq-client.version}</version>
             </dependency>
-
+ 
             <!-- TEST dependencies -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>

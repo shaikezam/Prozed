@@ -786,7 +786,7 @@ Run the [`simple-example`](examples/simple-example) app as a self-contained runn
 mvn -pl examples/simple-example -am clean package
 
 # run it — no Maven needed at runtime
-java -jar examples/simple-example/target/simple-example-1.0-SNAPSHOT.jar
+java -jar examples/simple-example/target/simple-example-1.0.0-SNAPSHOT.jar
 ```
 
 `simple-example` configures the Shade plugin (see [Packaging & Deployment](#packaging--deployment)), so `package` emits a runnable uber-jar with the module service files merged. For a multi-service, containerized setup, see [`microservices-containerized-example`](examples/microservices-containerized-example).

@@ -70,7 +70,7 @@ mvn -f ../../pom.xml install -DskipTests
 ```bash
 # from examples/simple-example
 mvn package
-java -jar target/simple-example-1.0-SNAPSHOT.jar
+java -jar target/simple-example-1.0.0-SNAPSHOT.jar
 ```
 
 The server starts on port `8080`. Try it:

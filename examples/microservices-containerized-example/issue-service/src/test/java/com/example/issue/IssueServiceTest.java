@@ -1,43 +1,64 @@
 package com.example.issue;
 
+import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
-import prozed.io.core.api.di.Inject;
-import prozed.io.jdbc.JdbcOperations;
 import prozed.io.test.api.ProzedTest;
+import prozed.io.test.operations.HttpClientOperations;
+import prozed.io.test.operations.HttpClientOperations.DeserializedResponse;
+
+import java.net.http.HttpRequest;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ProzedTest(mainClass = Main.class, cleanUp = true)
 public class IssueServiceTest {
 
-    @Inject
-    private IssueController issueController;
-
-    private final JdbcOperations jdbc = new JdbcOperations();
+    private final HttpClientOperations httpClient = HttpClientOperations.createDefault();
+    private final Gson gson = new Gson();
 
     @Test
-    public void testCreateIssueGeneratesKey() {
+    void testCreateIssueGeneratesKey() throws Exception {
         // PROZ has 5 seeded issues, so the next key is PROZ-6.
-        String key = issueController.createIssue(new IssueController.IssueRequest(
+        String body = gson.toJson(new IssueController.IssueRequest(
             "PROZ", "TASK", "Add rate limiting", "Throttle login attempts.", "PROZ-1", "me", "HIGH"));
 
-        assertEquals("PROZ-6", key);
+        DeserializedResponse<String> response = httpClient.sendAndDeserializeWithResponse(
+            httpClient.request("/issues/")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build(),
+            String.class);
 
-        String summary = jdbc.selectOne("SELECT summary FROM issues WHERE issue_key = ?",
-            rs -> rs.getString("summary"), key);
-        assertEquals("Add rate limiting", summary);
+        assertEquals(200, response.statusCode());
+        assertEquals("PROZ-6", response.body());
 
-        String status = jdbc.selectOne("SELECT status FROM issues WHERE issue_key = ?",
-            rs -> rs.getString("status"), key);
-        assertEquals("TODO", status);
+        IssueController.Issue created = fetchIssue("PROZ-6");
+        assertEquals("Add rate limiting", created.summary());
+        assertEquals("TODO", created.status());
     }
 
     @Test
-    public void testTransitionUpdatesStatus() {
-        issueController.transition(new IssueController.TransitionRequest("PROZ-2", "DONE"));
+    void testTransitionUpdatesStatus() throws Exception {
+        String body = gson.toJson(new IssueController.TransitionRequest("PROZ-2", "DONE"));
 
-        String status = jdbc.selectOne("SELECT status FROM issues WHERE issue_key = ?",
-            rs -> rs.getString("status"), "PROZ-2");
-        assertEquals("DONE", status);
+        DeserializedResponse<String> response = httpClient.sendAndDeserializeWithResponse(
+            httpClient.request("/issues/transition")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build(),
+            String.class);
+
+        assertEquals(200, response.statusCode());
+        assertEquals("DONE", fetchIssue("PROZ-2").status());
+    }
+
+    private IssueController.Issue fetchIssue(String issueKey) throws Exception {
+        DeserializedResponse<IssueController.Issue[]> list = httpClient.sendAndDeserializeWithResponse(
+            httpClient.request("/issues/").GET().build(), IssueController.Issue[].class);
+        return Arrays.stream(list.body())
+            .filter(i -> issueKey.equals(i.issueKey()))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("Issue not found: " + issueKey));
     }
 }

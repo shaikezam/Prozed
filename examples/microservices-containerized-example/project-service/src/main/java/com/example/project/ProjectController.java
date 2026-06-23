@@ -23,7 +23,7 @@ public class ProjectController {
             rs -> new Project(rs.getString("project_key"), rs.getString("name"), rs.getString("description")));
     }
 
-    @PostRequest(value = "/")
+    @PostRequest(value = "/", produces = ContentType.TEXT_PLAIN)
     public String create(@PayloadParam ProjectRequest request) {
         log.info("Creating project: {}", request.projectKey());
 

@@ -539,7 +539,7 @@ public class UserEventListener implements MessageListener {
 @ProzedTest(mainClass = com.example.Main.class)
 class UserControllerTest {
 
-    private final HttpClientOperations http = HttpClientOperations.createDefault(8080, "/");
+    private final HttpClientOperations http = HttpClientOperations.createDefault();
 
     @Test
     void getsUser() throws Exception {
@@ -572,9 +572,42 @@ class UserControllerTest {
 | --- | --- |
 | `mainClass` | Your application entry point (required) |
 | `mainArgs` | Arguments passed to `main` |
-| `cleanUp` | When `true` **and `prozed-jdbc` is on the classpath**, each test runs inside a transaction that is **rolled back** afterward, so tests don't pollute the database |
+| `cleanUp` | When `true` **and the `prozed-jdbc` test-jar is on the test classpath**, each test runs inside a transaction that is **rolled back** afterward, so tests don't pollute the database |
 
-> The test port is read from the test classpath's `prozed.properties` — point `HttpClientOperations` at the same port.
+> The test port is read from the test classpath's `prozed.properties`.
+
+### Accessing beans in a test
+
+`@ProzedTest` boots the application but does **not** process `@Inject` on the test instance — annotating a test field does nothing and leaves it `null`. Drive the app over HTTP with `HttpClientOperations` for most cases. When a test needs a bean directly (for example, to publish a JMS message that has no HTTP entry point), pull it from the running container:
+
+```java
+JmsOperations jms = (JmsOperations) ProzedServer.getContainer().get(JmsOperations.class);
+jms.sendMessage(event, "issues.queue", DestinationType.QUEUE);
+```
+
+`getContainer()` is available once the server has started (i.e. inside a `@Test` method), and `get(Class)` returns the same singleton the application uses — so writes still flow through `cleanUp`'s rolled-back connection.
+
+### Enabling `cleanUp`
+
+Database rollback is driven by `TestJdbcOperations`, which ships in the **`prozed-jdbc` test-jar**. The extension silently runs **without** rollback if that artifact is missing — every write commits and leaks into the next test. Add the test-jar (alongside `prozed-test`) to any module whose tests use `cleanUp = true`:
+
+```xml
+<dependency>
+    <groupId>io.github.shaikezam</groupId>
+    <artifactId>prozed-test</artifactId>
+    <version>${prozed.version}</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.github.shaikezam</groupId>
+    <artifactId>prozed-jdbc</artifactId>
+    <version>${prozed.version}</version>
+    <type>test-jar</type>
+    <scope>test</scope>
+</dependency>
+```
+
+`TestJdbcOperations` hands every query — including those run on Tomcat request threads during an HTTP call — a single shared, uncommitted connection, so `cleanUp` isolates HTTP-driven tests too.
 
 ---
 

@@ -18,30 +18,27 @@ public class IssueServiceTest {
     private final Gson gson = new Gson();
 
     @Test
-    void testCreateIssueGeneratesKey() throws Exception {
-        // PROZ has 5 seeded issues, so the next key is PROZ-6.
-        String body = gson.toJson(new IssueController.IssueRequest(
-            "PROZ", "TASK", "Add rate limiting", "Throttle login attempts.", "PROZ-1", "me", "HIGH"));
-
-        DeserializedResponse<String> response = httpClient.sendAndDeserializeWithResponse(
-            httpClient.request("/issues/")
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build(),
-            String.class);
+    void testCreateIssueGeneratesSequentialKey() throws Exception {
+        // No issues are seeded under the APP project, so the first created issue is APP-1.
+        DeserializedResponse<String> response = createIssue(
+            "APP", "TASK", "Add rate limiting", "Throttle login attempts.", null, "me", "HIGH");
 
         assertEquals(200, response.statusCode());
-        assertEquals("PROZ-6", response.body());
+        assertEquals("APP-1", response.body());
 
-        IssueController.Issue created = fetchIssue("PROZ-6");
+        IssueController.Issue created = fetchIssue("APP-1");
         assertEquals("Add rate limiting", created.summary());
         assertEquals("TODO", created.status());
     }
 
     @Test
     void testTransitionUpdatesStatus() throws Exception {
-        String body = gson.toJson(new IssueController.TransitionRequest("PROZ-2", "DONE"));
+        // Create the issue this test owns, then transition it — no reliance on seeded rows.
+        String issueKey = createIssue(
+            "APP", "TASK", "Add rate limiting", "Throttle login attempts.", null, "me", "HIGH").body();
+        assertEquals("TODO", fetchIssue(issueKey).status());
 
+        String body = gson.toJson(new IssueController.TransitionRequest(issueKey, "DONE"));
         DeserializedResponse<String> response = httpClient.sendAndDeserializeWithResponse(
             httpClient.request("/issues/transition")
                 .header("Content-Type", "application/json")
@@ -50,7 +47,20 @@ public class IssueServiceTest {
             String.class);
 
         assertEquals(200, response.statusCode());
-        assertEquals("DONE", fetchIssue("PROZ-2").status());
+        assertEquals("DONE", fetchIssue(issueKey).status());
+    }
+
+    private DeserializedResponse<String> createIssue(String projectKey, String type, String summary,
+                                                     String description, String parentKey,
+                                                     String assignee, String priority) throws Exception {
+        String body = gson.toJson(new IssueController.IssueRequest(
+            projectKey, type, summary, description, parentKey, assignee, priority));
+        return httpClient.sendAndDeserializeWithResponse(
+            httpClient.request("/issues/")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build(),
+            String.class);
     }
 
     private IssueController.Issue fetchIssue(String issueKey) throws Exception {

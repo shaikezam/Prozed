@@ -64,8 +64,14 @@ public class HttpClientOperations {
     public <T> DeserializedResponse<T> sendAndDeserializeWithResponse(HttpRequest request, Class<T> clazz)
             throws IOException, InterruptedException {
         HttpResponse<String> response = delegate.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
         T body = gson.fromJson(response.body(), clazz);
         return new DeserializedResponse<>(response.statusCode(), response.headers(), body);
+    }
+
+    public HttpResponse<String> sendAndDeserializeWithRawResponse(HttpRequest request)
+            throws IOException, InterruptedException {
+        return delegate.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
     private static int resolvePort() {

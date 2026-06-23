@@ -726,9 +726,15 @@ The `spring-boot-maven-plugin` `repackage` goal produces a **nested** layout (`B
 | `prozed-jdbc` | `JdbcOperations`, connection pooling, transactions, Flyway migrations |
 | `prozed-jms` | `JmsOperations`, `@Listener` consumers (ActiveMQ) |
 | `prozed-test` | `@ProzedTest` JUnit 5 extension + `HttpClientOperations` |
-| `prozed-example` | A complete runnable sample app (REST + JDBC + JMS + filters + tests) |
 
-The fastest way to learn Prozed is to read **`prozed-example`** end to end.
+Runnable sample apps live under [`examples/`](examples):
+
+| Example | Description |
+| --- | --- |
+| [`simple-example`](examples/simple-example) | A single-process app exercising every module (REST + JDBC + JMS + filters + tests) |
+| [`microservices-containerized-example`](examples/microservices-containerized-example) | A task tracker as three Prozed microservices + PHP UI, wired with JMS and Docker Compose |
+
+The fastest way to learn Prozed is to read [`simple-example`](examples/simple-example) end to end.
 
 ---
 
@@ -740,17 +746,17 @@ cd Prozed
 mvn clean install
 ```
 
-Run the example app as a self-contained runnable jar:
+Run the [`simple-example`](examples/simple-example) app as a self-contained runnable jar:
 
 ```bash
 # build the example (and the modules it depends on) into one fat jar
-mvn -pl prozed-example -am clean package
+mvn -pl examples/simple-example -am clean package
 
 # run it — no Maven needed at runtime
-java -jar prozed-example/target/prozed-example-1.0-SNAPSHOT.jar
+java -jar examples/simple-example/target/simple-example-1.0-SNAPSHOT.jar
 ```
 
-`prozed-example` configures the Shade plugin (see [Packaging & Deployment](#packaging--deployment)), so `package` emits a runnable uber-jar with the module service files merged.
+`simple-example` configures the Shade plugin (see [Packaging & Deployment](#packaging--deployment)), so `package` emits a runnable uber-jar with the module service files merged. For a multi-service, containerized setup, see [`microservices-containerized-example`](examples/microservices-containerized-example).
 
 Requires JDK 17+ and Maven 3.9+.
 

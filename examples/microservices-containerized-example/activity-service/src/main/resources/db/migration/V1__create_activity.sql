@@ -1,0 +1,7 @@
+CREATE TABLE activity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    issue_key VARCHAR(30),
+    action VARCHAR(50),
+    detail VARCHAR(500),
+    logged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

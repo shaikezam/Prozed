@@ -28,12 +28,7 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-broker</artifactId>
-        </dependency>
-
-        <dependency>
+<dependency>
             <groupId>io.github.shaikezam</groupId>
             <artifactId>prozed-test</artifactId>
             <version>${project.version}</version>

@@ -1,6 +1,7 @@
 package prozed.io.test.operations;
 
 import com.google.gson.Gson;
+import prozed.io.test.utils.TestPropertiesReader;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,22 +20,26 @@ public class HttpClientOperations {
     private final String basePath;
 
     public static HttpClientOperations createDefault() {
-        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", 8080, "");
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", "");
     }
 
     public static HttpClientOperations createDefault(String host, String schema) {
-        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), host, schema, 8080, "");
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), host, schema, "");
     }
 
-    public static HttpClientOperations createDefault(int port, String basePath) {
-        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", port, basePath);
+    public static HttpClientOperations createDefault(String basePath) {
+        return new HttpClientOperations(HttpClient.newHttpClient(), new Gson(), "localhost", "http", basePath);
     }
 
     public HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema) {
-        this(delegate, gson, host, schema, 8080, "");
+        this(delegate, gson, host, schema, "");
     }
 
-    public HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema, int port, String basePath) {
+    public HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema, String basePath) {
+        this(delegate, gson, host, schema, resolvePort(), basePath);
+    }
+
+    private HttpClientOperations(HttpClient delegate, Gson gson, String host, String schema, int port, String basePath) {
         this.delegate = delegate;
         this.gson = gson;
         this.host = host;
@@ -61,6 +66,10 @@ public class HttpClientOperations {
         HttpResponse<String> response = delegate.send(request, HttpResponse.BodyHandlers.ofString());
         T body = gson.fromJson(response.body(), clazz);
         return new DeserializedResponse<>(response.statusCode(), response.headers(), body);
+    }
+
+    private static int resolvePort() {
+        return Integer.parseInt(TestPropertiesReader.getProperty("web.service.port", "8080"));
     }
 
     private String url(String path) {

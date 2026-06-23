@@ -1,0 +1,6 @@
+target/
+frontend-ui/vendor/
+frontend-ui/composer.lock
+.idea/
+*.iml
+.DS_Store

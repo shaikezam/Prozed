@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  task-tracker-activemq:
+    image: apache/activemq-classic:latest
+    container_name: task-tracker-activemq
+    networks:
+      - task-tracker-net
+
+  task-tracker-mariadb:
+    image: mariadb:10.11
+    container_name: task-tracker-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+    command: >
+      sh -c "
+      docker-entrypoint.sh mariadbd &
+      until mariadb-check --all-databases -uroot -proot > /dev/null 2>&1; do sleep 1; done;
+      mariadb -uroot -proot -e 'CREATE DATABASE IF NOT EXISTS project_db; CREATE DATABASE IF NOT EXISTS issue_db; CREATE DATABASE IF NOT EXISTS activity_db;';
+      wait"
+    networks:
+      - task-tracker-net
+
+  task-tracker-phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: task-tracker-phpmyadmin
+    environment:
+      - PMA_HOST=task-tracker-mariadb
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    ports:
+      - "8093:80"
+    depends_on:
+      - task-tracker-mariadb
+    networks:
+      - task-tracker-net
+
+  project-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: project-service
+    volumes:
+      - ./project-service/target/project-service-fat.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    depends_on:
+      - task-tracker-mariadb
+      - task-tracker-activemq
+    restart: on-failure
+    networks:
+      - task-tracker-net
+
+  issue-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: issue-service
+    volumes:
+      - ./issue-service/target/issue-service-fat.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    depends_on:
+      - task-tracker-mariadb
+      - task-tracker-activemq
+    restart: on-failure
+    networks:
+      - task-tracker-net
+
+  activity-service:
+    image: eclipse-temurin:17-jre-alpine
+    container_name: activity-service
+    volumes:
+      - ./activity-service/target/activity-service-fat.jar:/app.jar
+    command: ["java", "-jar", "/app.jar"]
+    depends_on:
+      - task-tracker-mariadb
+      - task-tracker-activemq
+    restart: on-failure
+    networks:
+      - task-tracker-net
+
+  task-tracker-frontend-ui:
+    image: php:8.2-cli
+    container_name: task-tracker-frontend-ui
+    volumes:
+      - ./frontend-ui:/app
+    working_dir: /app
+    command: ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+    ports:
+      - "8092:8000"
+    depends_on:
+      - project-service
+      - issue-service
+      - activity-service
+    networks:
+      - task-tracker-net
+
+networks:
+  task-tracker-net:
+    driver: bridge

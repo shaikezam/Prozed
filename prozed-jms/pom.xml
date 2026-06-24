@@ -6,10 +6,14 @@
     <parent>
         <groupId>io.github.shaikezam</groupId>
         <artifactId>prozed-parent</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>prozed-jms</artifactId>
+
+    <name>Prozed JMS</name>
+    <description>Prozed JMS module: JmsOperations and @Listener message consumers (ActiveMQ).</description>
+    <url>https://github.com/shaikezam/Prozed</url>
 
     <properties>
     </properties>

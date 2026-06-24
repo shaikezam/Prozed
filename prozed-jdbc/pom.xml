@@ -6,10 +6,15 @@
     <parent>
         <groupId>io.github.shaikezam</groupId>
         <artifactId>prozed-parent</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>prozed-jdbc</artifactId>
+
+    <name>Prozed JDBC</name>
+    <description>Prozed JDBC module: JdbcOperations, connection pooling, transactions, and Flyway
+        migrations.</description>
+    <url>https://github.com/shaikezam/Prozed</url>
 
     <properties>
     </properties>

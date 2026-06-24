@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 .kotlin
 *.db
+*.versionsBackup
 
 ### IntelliJ IDEA ###
 .idea/

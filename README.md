@@ -1,3 +1,4 @@
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.shaikezam/prozed-core?label=Maven%20Central&color=blue)](https://central.sonatype.com/artifact/io.github.shaikezam/prozed-core)
 ![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9-red?logo=apache-maven&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
@@ -96,7 +97,7 @@ If you've ever wanted a "Spring Boot, but I can actually read the source" — th
 
 ## Install
 
-Prozed is published under `io.github.shaikezam`. Add the core module:
+Prozed is on **Maven Central** under `io.github.shaikezam` — no extra repository or credentials needed. Add the core module:
 
 ```xml
 <dependency>
@@ -132,7 +133,7 @@ Add optional modules as needed:
 </dependency>
 ```
 
-> Replace `1.0.0` with the latest released version.
+> Use the latest version shown in the **Maven Central** badge at the top of this page.
 
 ---
 

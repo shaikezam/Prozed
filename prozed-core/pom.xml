@@ -6,10 +6,15 @@
     <parent>
         <groupId>io.github.shaikezam</groupId>
         <artifactId>prozed-parent</artifactId>
-        <version>1.0.3</version>
+        <version>1.0.4</version>
     </parent>
 
     <artifactId>prozed-core</artifactId>
+
+    <name>Prozed Core</name>
+    <description>Prozed core: dependency-injection container, annotation-based REST routing, and an
+        embedded Tomcat HTTP server.</description>
+    <url>https://github.com/shaikezam/Prozed</url>
 
     <licenses>
         <license>

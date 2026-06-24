@@ -6,8 +6,13 @@
 
     <groupId>io.github.shaikezam</groupId>
     <artifactId>prozed-parent</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>pom</packaging>
+
+    <name>Prozed Parent</name>
+    <description>Prozed: a tiny, zero-magic Java web framework — annotation-based REST routing, a DI
+        container, and optional JDBC/JMS modules on embedded Tomcat. Parent aggregator POM.</description>
+    <url>https://github.com/shaikezam/Prozed</url>
 
     <licenses>
         <license>

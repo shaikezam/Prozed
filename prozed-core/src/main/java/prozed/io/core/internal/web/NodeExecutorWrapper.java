@@ -1,6 +1,7 @@
 package prozed.io.core.internal.web;
 
 import com.google.gson.Gson;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import prozed.io.core.api.exception.HttpException;
 import prozed.io.core.api.web.PathParam;
@@ -18,7 +19,11 @@ public record NodeExecutorWrapper(
         Map<String, String> queryParams,
         Method method
 ) {
-    public Object execute(Object controller, String payload, Gson gson) throws Exception {
+    public Object execute(Object controller,
+                          String payload,
+                          HttpServletRequest req,
+                          HttpServletResponse resp,
+                          Gson gson) throws Exception {
         // Build arguments array in the correct order
         Object[] args = new Object[method.getParameterCount()];
 
@@ -50,6 +55,12 @@ public record NodeExecutorWrapper(
                 } catch (Exception e) {
                     throw new HttpException("Payload parameter %s could not be parsed".formatted(parameter.getName()), HttpServletResponse.SC_BAD_REQUEST, e);
                 }
+            }
+
+            if (parameter.getType().equals(HttpServletRequest.class)) {
+                args[i] = req;
+            } else if (parameter.getType().equals(HttpServletResponse.class)) {
+                args[i] = resp;
             }
         }
 

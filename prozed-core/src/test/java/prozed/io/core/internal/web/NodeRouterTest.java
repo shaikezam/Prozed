@@ -1,5 +1,6 @@
 package prozed.io.core.internal.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -84,15 +85,6 @@ class NodeRouterTest {
     }
 
     @Test
-    void testLookupNotFound() {
-        // given
-
-        // when
-
-        // then
-    }
-
-    @Test
     void testLookupPrefixNodeNo404() {
         // given
         Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "testMethod1", String.class);
@@ -153,11 +145,71 @@ class NodeRouterTest {
         assertNotNull(ReflectionUtils.getField(router, "root"));
     }
 
+    @Test
+    void testHttpRequestParamIsValid() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "httpRequestServlet", HttpServletRequest.class);
+
+        // when
+        router.addRoute("/test", method, HttpMethod.GET);
+
+        // then
+        assertNotNull(ReflectionUtils.getField(router, "root"));
+    }
+
+    @Test
+    void testHttpResponseParamIsValid() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "httpResponseServlet", HttpServletResponse.class);
+
+        // when
+        router.addRoute("/test", method, HttpMethod.GET);
+
+        // then
+        assertNotNull(ReflectionUtils.getField(router, "root"));
+    }
+
+    @Test
+    void testBothHttpParamsIsValid() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "bothHttpParams", HttpServletRequest.class, HttpServletResponse.class);
+
+        // when
+        router.addRoute("/test", method, HttpMethod.GET);
+
+        // then
+        assertNotNull(ReflectionUtils.getField(router, "root"));
+    }
+
+    @Test
+    void testHttpParamWithPathParamIsValid() {
+        // given
+        Method method = ReflectionUtils.getMethod(NodeRouterTest.class, "httpWithPathParam", String.class, HttpServletRequest.class);
+
+        // when
+        router.addRoute("/test/{id}", method, HttpMethod.GET);
+
+        // then
+        assertNotNull(ReflectionUtils.getField(router, "root"));
+    }
+
     public void twoPayloadParamsMethod(@PayloadParam String param1, @PayloadParam String param2) {
 
     }
 
     public void unboundParamMethod(int page) {
+    }
+
+    public void httpRequestServlet(HttpServletRequest request) {
+    }
+
+    public void httpResponseServlet(HttpServletResponse response) {
+    }
+
+    public void bothHttpParams(HttpServletRequest request, HttpServletResponse response) {
+    }
+
+    public void httpWithPathParam(@PathParam("id") String id, HttpServletRequest request) {
     }
 
     public void zeroParamMethod() {

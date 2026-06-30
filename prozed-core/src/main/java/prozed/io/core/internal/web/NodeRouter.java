@@ -1,5 +1,6 @@
 package prozed.io.core.internal.web;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,9 +167,11 @@ final public class NodeRouter {
         for (Parameter parameter : method.getParameters()) {   // empty for health() -> no-op
             boolean bound = parameter.isAnnotationPresent(PathParam.class)
                     || parameter.isAnnotationPresent(QueryParam.class)
-                    || parameter.isAnnotationPresent(PayloadParam.class);
+                    || parameter.isAnnotationPresent(PayloadParam.class)
+                    || parameter.getType().equals(HttpServletResponse.class)
+                    || parameter.getType().equals(HttpServletRequest.class);
             if (!bound) {
-                String errorMessage = "Unbound parameter '%s' in %s.%s — add @PathParam, @QueryParam, or @PayloadParam"
+                String errorMessage = "Unbound parameter '%s' in %s.%s — add @PathParam, @QueryParam, @PayloadParam, HttpServletResponse or HttpServletRequest"
                         .formatted(parameter.getName(),
                                 method.getDeclaringClass().getSimpleName(), method.getName());
                 logger.error(errorMessage);

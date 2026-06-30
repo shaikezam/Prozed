@@ -74,6 +74,8 @@ public class DispatcherServlet extends HttpServlet {
             Object result = nodeExecutorWrapper.execute(
                     controller,
                     payload,
+                    req,
+                    resp,
                     this.gson);
             if (result != null) {
                 Method handlerMethod = nodeExecutorWrapper.method();

@@ -8,6 +8,7 @@ import prozed.io.test.api.ProzedTest;
 import prozed.io.test.operations.HttpClientOperations;
 import prozed.io.test.operations.HttpClientOperations.DeserializedResponse;
 
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
@@ -241,5 +242,20 @@ public class UserControllerTest {
 
         // then
         assertEquals(405, response.statusCode());
+    }
+
+    @Test
+    void testLogin() throws Exception {
+        // given
+        HttpRequest request = httpClient.request("/login")
+                .GET()
+                .build();
+
+        // when
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // then
+        assertEquals(200, response.statusCode());
+        assertEquals("valid", response.headers().firstValue("session").get());
     }
 }

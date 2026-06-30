@@ -49,6 +49,11 @@ public class UserController {
         return userService.search(name, limit);
     }
 
+    @GetRequest(value = "/login")
+    public void login(HttpServletResponse response) {
+        response.setHeader("session", "valid");
+    }
+
     @GetRequest(value = "/health", produces = ContentType.TEXT_PLAIN)
     public String health() {
         return "OK";

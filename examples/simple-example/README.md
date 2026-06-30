@@ -16,6 +16,7 @@ Everything runs in one JVM: the web server, an in-memory database, and a message
 |---|---|---|
 | Annotation-based REST routing | `UserController` | `@Controller`, `@GetRequest`/`@PostRequest`/`@PutRequest`/`@DeleteRequest` |
 | Path / query / payload binding | `UserController` | `@PathParam`, `@QueryParam`, `@PayloadParam` |
+| Raw servlet access | `UserController#login` | `HttpServletResponse` param sets a response header (no annotation) |
 | Dependency injection | `UserService`, `UserRepository` | `@Bean` + `@Inject`, no XML |
 | JDBC access & transactions | `UserRepository` | `JdbcOperations.select/selectOne/update` + `inTransaction(...)` |
 | Flyway schema migrations | `db/migration/` | `V1__init.sql` creates `users`, `V2__insert.sql` seeds rows |

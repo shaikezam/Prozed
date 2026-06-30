@@ -262,6 +262,8 @@ public class UserController {
 | `@PathParam("{name}")` | A URL path segment | `/users/{id}` → `@PathParam("{id}") int id` |
 | `@QueryParam("name")` | A query-string value | `?page=2` → `@QueryParam("page") int page` |
 | `@PayloadParam` | The JSON request body | `@PayloadParam User user` (one per method) |
+| `HttpServletRequest` | The raw servlet request | `HttpServletRequest request` (no annotation) |
+| `HttpServletResponse` | The raw servlet response | `HttpServletResponse response` (no annotation) |
 
 > ⚠️ **`@PathParam` value must include the braces** and exactly match the route placeholder. For the route `/users/{id}`, bind with `@PathParam("{id}")` — **not** `@PathParam("id")`.
 
@@ -305,16 +307,47 @@ $ curl 'http://localhost:8080/users/search?name=Bob'   # limit omitted -> defaul
 
 Query strings are split on `&`, keys/values are URL-decoded, and blank entries are ignored. A value is bound to the parameter by name and converted to its declared type.
 
+### Raw servlet access — `HttpServletRequest` / `HttpServletResponse`
+
+Need a header, the raw request, or fine-grained control over the response? Declare an `HttpServletRequest` and/or `HttpServletResponse` parameter — **no annotation required**. Prozed injects the live servlet objects. Mix them freely with `@PathParam` / `@QueryParam` / `@PayloadParam`.
+
+```java
+// Read a request header
+@GetRequest(value = "/whoami")
+public String whoami(HttpServletRequest request) {
+    return request.getHeader("X-User");
+}
+
+// Write a response header + status directly
+@GetRequest(value = "/download")
+public void download(HttpServletResponse response) {
+    response.setHeader("Content-Disposition", "attachment; filename=data.csv");
+    response.setStatus(HttpServletResponse.SC_OK);
+}
+
+// Both, alongside a bound param
+@GetRequest(value = "/users/{id}")
+public User getUser(@PathParam("{id}") int id,
+                    HttpServletRequest request,
+                    HttpServletResponse response) {
+    response.setHeader("X-Trace-Id", request.getHeader("X-Trace-Id"));
+    return userService.findById(id).orElseThrow();
+}
+```
+
 ### Every handler parameter must be bound
 
-Each parameter of a handler method **must** carry exactly one of `@PathParam`, `@QueryParam`, or `@PayloadParam`. Prozed validates this at **startup** (when routes are registered) and fails fast with a clear message rather than throwing a `500` at request time:
+Each parameter of a handler method **must** be one of: annotated with `@PathParam`, `@QueryParam`, or `@PayloadParam`, **or** typed as `HttpServletRequest` or `HttpServletResponse`. Prozed validates this at **startup** (when routes are registered) and fails fast with a clear message rather than throwing a `500` at request time:
 
 ```java
 @GetRequest(value = "/bad")
-public String bad(int page) { ... }   // ❌ startup error: "Unbound parameter 'page' in ... — add @PathParam, @QueryParam, or @PayloadParam"
+public String bad(int page) { ... }   // ❌ startup error: "Unbound parameter 'page' in ... — add @PathParam, @QueryParam, @PayloadParam, HttpServletResponse or HttpServletRequest"
 
 @GetRequest(value = "/ok")
 public String ok(@QueryParam("page") int page) { ... }   // ✅
+
+@GetRequest(value = "/raw")
+public void raw(HttpServletResponse response) { ... }     // ✅ servlet params need no annotation
 
 @GetRequest(value = "/health")
 public String health() { ... }        // ✅ zero-parameter handlers are always valid

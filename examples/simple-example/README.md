@@ -1,4 +1,4 @@
-![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
+![Java 21](https://img.shields.io/badge/Java-21-orange?logo=java&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9-red?logo=apache-maven&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
@@ -55,7 +55,7 @@ Everything runs in one JVM: the web server, an in-memory database, and a message
 
 ## Prerequisites
 
-- Java 17+
+- Java 21+
 - Maven 3.9+
 
 The Prozed modules are resolved from your local `~/.m2` repository, so build the framework once from the repo root before running this example:

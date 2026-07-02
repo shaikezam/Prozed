@@ -1,5 +1,5 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.shaikezam/prozed-core?label=Maven%20Central&color=blue)](https://central.sonatype.com/artifact/io.github.shaikezam/prozed-core)
-![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
+![Java 21](https://img.shields.io/badge/Java-21-orange?logo=java&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9-red?logo=apache-maven&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
@@ -90,7 +90,7 @@ If you've ever wanted a "Spring Boot, but I can actually read the source" — th
 
 ## Requirements
 
-- **Java 17+**
+- **Java 21+**
 - **Maven 3.9+** (or Gradle)
 
 ---
@@ -825,7 +825,7 @@ java -jar examples/simple-example/target/simple-example-1.0.0-SNAPSHOT.jar
 
 `simple-example` configures the Shade plugin (see [Packaging & Deployment](#packaging--deployment)), so `package` emits a runnable uber-jar with the module service files merged. For a multi-service, containerized setup, see [`microservices-containerized-example`](examples/microservices-containerized-example).
 
-Requires JDK 17+ and Maven 3.9+.
+Requires JDK 21+ and Maven 3.9+.
 
 ---
 

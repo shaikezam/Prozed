@@ -1,4 +1,4 @@
-![Java 17](https://img.shields.io/badge/Java-17-orange?logo=java&logoColor=white)
+![Java 21](https://img.shields.io/badge/Java-21-orange?logo=java&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9-red?logo=apache-maven&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
@@ -69,7 +69,7 @@ Each service owns its schema and never touches another service's tables. The sin
 
 ## Prerequisites
 
-- Java 17+
+- Java 21+
 - Maven 3.9+
 - Docker + Docker Compose
 

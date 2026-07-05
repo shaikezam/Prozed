@@ -760,12 +760,15 @@ All settings live in `prozed.properties` on the classpath.
 
 ### JMS (`prozed-jms`)
 
-| Property | Description |
-| --- | --- |
-| `jms.broker.type` | Broker type (e.g. `activemq`) |
-| `jms.broker.url` | Broker URL (e.g. `tcp://localhost:61616`) |
-| `jms.username` | Broker username |
-| `jms.password` | Broker password |
+| Property | Description | Default |
+| --- | --- | --- |
+| `jms.broker.type` | Broker type (e.g. `activemq`) | — |
+| `jms.broker.url` | Broker URL (e.g. `tcp://localhost:61616`) | — |
+| `jms.username` | Broker username | — |
+| `jms.password` | Broker password | — |
+| `jms.pool.max-connections` | Max pooled connections | `10` |
+| `jms.pool.max-sessions-per-connection` | Max active sessions per connection | `500` |
+| `jms.pool.idle-timeout` | Idle connection timeout (ms) | `30000` |
 
 ### Example: full `prozed.properties`
 
@@ -786,6 +789,9 @@ jms.broker.type=activemq
 jms.broker.url=tcp://localhost:61616
 jms.username=admin
 jms.password=admin
+jms.pool.max-connections=10
+jms.pool.max-sessions-per-connection=500
+jms.pool.idle-timeout=30000
 ```
 
 ---

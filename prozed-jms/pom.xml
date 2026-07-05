@@ -32,7 +32,11 @@
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
         </dependency>
-<dependency>
+        <dependency>
+            <groupId>org.messaginghub</groupId>
+            <artifactId>pooled-jms</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.github.shaikezam</groupId>
             <artifactId>prozed-test</artifactId>
             <version>${project.version}</version>

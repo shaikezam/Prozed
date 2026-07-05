@@ -84,12 +84,6 @@ public class DefaultCronScheduler {
         }
     }
 
-    /**
-     * Schedules a one-shot watchdog on the timer thread. When the timeout fires,
-     * if the execution is still in flight, interrupt it. The task will only stop
-     * if the code honors the interrupt (JDBC queryTimeout, Thread.interrupted(),
-     * blocking I/O with InterruptedException).
-     */
     private void enforceTimeout(Future<?> execution) {
         timer.schedule(() -> {
             if (!execution.isDone()) {
@@ -109,11 +103,6 @@ public class DefaultCronScheduler {
         drainCurrentExecution();
     }
 
-    /**
-     * Wait for an in-flight execution to finish so callers (shutdown) can rely on no
-     * task still touching shared resources once stop() returns. Bounded wait; if the
-     * task overruns it is interrupted, same contract as the timeout watchdog.
-     */
     private void drainCurrentExecution() {
         Future<?> execution = currentExecution;
         if (execution == null || execution.isDone()) {

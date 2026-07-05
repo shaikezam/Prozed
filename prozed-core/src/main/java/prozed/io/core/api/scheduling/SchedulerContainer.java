@@ -12,15 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Central scheduler container bean.
- *
- * Platform timer triggers each tick; the work runs in a fresh virtual thread.
- * Guarantees:
- * - the same task never overlaps itself (skip-if-running)
- * - a stuck execution is interrupted after its timeout
- * - preDestroy waits briefly for in-flight work (open transactions) to finish
- */
 @Bean
 public class SchedulerContainer {
 
@@ -36,10 +27,6 @@ public class SchedulerContainer {
         LOGGER.info("SchedulerContainer created");
     }
 
-    /**
-     * Register and start a task. The first run happens after {@code initialDelay}, then
-     * every {@code interval}. Pass {@code timeout} 0 for no timeout.
-     */
     public void register(SchedulingTaskProperties schedulingTaskProperties) {
 
         DefaultCronScheduler scheduler = new DefaultCronScheduler(
@@ -58,12 +45,6 @@ public class SchedulerContainer {
         LOGGER.info("Scheduler '{}' registered and started", schedulingTaskProperties.taskName());
     }
 
-    /**
-     * Pause every registered task: cancel its timer and drain any in-flight execution,
-     * but keep the executors alive so the tasks can be {@link #resume() resumed}. Once
-     * this returns, no scheduler thread is running — safe to tear down resources the
-     * tasks touch (e.g. a shared DB connection during a test).
-     */
     public void pause() {
         for (DefaultCronScheduler scheduler : schedulers) {
             try {
@@ -74,9 +55,6 @@ public class SchedulerContainer {
         }
     }
 
-    /**
-     * Re-arm every registered task after a {@link #pause()}. No-op for tasks already running.
-     */
     public void resume() {
         for (DefaultCronScheduler scheduler : schedulers) {
             try {

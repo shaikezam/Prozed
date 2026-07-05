@@ -71,8 +71,6 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         if (this.isCleanUpSupport) {
-            // Drain any stray tick, then bind THIS test's shared connection before the
-            // scheduler is allowed to run again — so ticks only ever see the current conn.
             invokeScheduler("pause");
 
             Class<?> jdbcOpertaionsClass = Class.forName(JDBC_OPS_CLASS);
@@ -83,8 +81,6 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
             Method setTestConnectionMethod = Class.forName(TEST_JDBC_OPS_CLASS).getMethod("setTestConnection", Connection.class);
             setTestConnectionMethod.invoke(testJdbcOpsInstance, conn);
             context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(TEST_CONN_KEY, conn);
-
-            // Connection bound — let scheduled tasks run against it for this test.
             invokeScheduler("resume");
         }
     }
@@ -92,9 +88,6 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         if (this.isCleanUpSupport) {
-            // Pause + drain the scheduler BEFORE releasing the connection, so no in-flight
-            // tick touches it once it is rolled back and closed. It stays paused until the
-            // next test binds a fresh connection (beforeEach re-arms it).
             invokeScheduler("pause");
 
             Connection conn = context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).get(TEST_CONN_KEY, Connection.class);
@@ -136,13 +129,8 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
 
         try {
             Class<?> prozedServerClass = Class.forName(SERVER_CLASS);
-            // Stop the server: releases its port and unblocks Tomcat's await loop so the
-            // main() thread unwinds (closing broker/H2 in its try-with-resources). Interrupt
-            // is only a backstop for the case where no server ever started.
             prozedServerClass.getMethod("shutdownCurrent").invoke(null);
             interrupt(serverThread);
-            // Wait for main() to unwind (its try-with-resources closes broker/H2) so their
-            // ports are free before the next test class boots.
             if (serverThread != null) {
                 serverThread.join(10000);
             }

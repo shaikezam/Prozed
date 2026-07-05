@@ -36,11 +36,6 @@ public class ProzedServer implements Closeable {
         CONTAINER = new ProzedContainer();
     }
 
-    /**
-     * Close the server currently running in this JVM, if any. {@code start()} blocks in
-     * Tomcat's await loop, which does not unwind on thread interrupt — so a test harness
-     * needs this to stop the server (release its port) deterministically between runs.
-     */
     public static void shutdownCurrent() {
         ProzedServer server = CURRENT;
         if (server != null) {

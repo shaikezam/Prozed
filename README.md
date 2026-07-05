@@ -47,6 +47,7 @@ public class Main {
 - [Dependency Injection](#dependency-injection)
 - [Bean Lifecycle Hooks](#bean-lifecycle-hooks)
 - [Servlet Filters](#servlet-filters)
+- [Scheduled Tasks](#scheduled-tasks)
 - [Database (prozed-jdbc)](#database-prozed-jdbc)
 - [Messaging (prozed-jms)](#messaging-prozed-jms)
 - [Testing (prozed-test)](#testing-prozed-test)
@@ -82,6 +83,7 @@ If you've ever wanted a "Spring Boot, but I can actually read the source" — th
 - 🔌 Path, query, and JSON-body parameter binding with automatic type conversion
 - 📦 Dependency-injection container with `@Bean` / `@Inject`, cycle detection, and lifecycle hooks
 - 🧱 Servlet `Filter` support for cross-cutting concerns (auth, CORS, etc.)
+- ⏰ Fixed-rate scheduled tasks on virtual threads, with per-task timeout and no-overlap guarantees
 - 🗄️ Optional JDBC module: connection pooling, transactions, Flyway migrations
 - 📨 Optional JMS module: send/consume messages with `@Listener` (ActiveMQ)
 - 🧪 JUnit 5 integration testing that boots your real application, with optional per-test DB rollback
@@ -445,6 +447,82 @@ public class AuthFilter implements Filter {
 
 ---
 
+## Scheduled Tasks
+
+Prozed ships a small scheduler in **core** (no extra module). `SchedulerContainer` is registered as a bean automatically — `@Inject` it and `register(...)` your recurring jobs.
+
+Unlike routing or lifecycle hooks, scheduling is **not** annotation-driven: there is no `@Scheduled`. You register tasks explicitly by handing the container a `SchedulingTaskProperties`. The natural place to do that is a bean's `postInit()` hook, once all beans are wired.
+
+```java
+@Bean
+public class ReportScheduler {
+
+    @Inject
+    private SchedulerContainer scheduler;
+    @Inject
+    private ReportService reportService;
+
+    public void postInit() {
+        // first run after one interval (5 min), then every 5 minutes, no timeout
+        scheduler.register(new SchedulingTaskProperties(
+                "nightly-report",
+                5, TimeUnit.MINUTES,
+                reportService::generate));
+
+        // wait 10s before the first run, then every 30s, interrupt a run if it exceeds 10s
+        scheduler.register(new SchedulingTaskProperties(
+                "sync-inventory",
+                10, TimeUnit.SECONDS,     // initial delay
+                30, TimeUnit.SECONDS,     // interval
+                10, TimeUnit.SECONDS,     // timeout
+                inventoryService::sync));
+    }
+}
+```
+
+### `SchedulingTaskProperties`
+
+A record describing one job:
+
+| Field | Meaning |
+| --- | --- |
+| `taskName` | Label used in logs |
+| `initialDelay` + `initialDelayUnit` | Delay before the first run |
+| `interval` + `intervalUnit` | Fixed-rate period between subsequent runs |
+| `timeout` + `timeoutUnit` | Max run time; the execution is interrupted if it exceeds this. **`0` = no timeout** |
+| `method` | The `Runnable` to execute |
+
+Constructors, simplest to fullest:
+
+```java
+// first run after one interval; no timeout
+new SchedulingTaskProperties(String taskName, long interval, TimeUnit intervalUnit, Runnable method);
+
+// explicit initial delay; no timeout
+new SchedulingTaskProperties(String taskName, long initialDelay, TimeUnit initialDelayUnit,
+                             long interval, TimeUnit intervalUnit, Runnable method);
+
+// explicit initial delay + timeout
+new SchedulingTaskProperties(String taskName, long initialDelay, TimeUnit initialDelayUnit,
+                             long interval, TimeUnit intervalUnit,
+                             long timeout, TimeUnit timeoutUnit, Runnable method);
+```
+
+`initialDelay` and `interval` may use different `TimeUnit`s. Register a task with `scheduler.register(...)` and it starts on its own schedule; tasks are stopped for you on server shutdown.
+
+### What to expect
+
+- **Tasks don't overlap themselves** — if a run is still going when the next interval arrives, that run is skipped, not queued.
+- **Timeout** — with `timeout > 0`, an overrunning run is interrupted. This stops work that responds to interruption (blocking I/O, JDBC query timeouts, code that checks `Thread.interrupted()`); a pure busy-loop that never checks won't be cut off.
+- **Clean shutdown** — in-flight tasks are given a moment to finish (so open DB transactions can commit) before the server stops.
+- **`interval` must be greater than 0.**
+
+### Use cases
+
+Cache warming/refresh, polling an external system, cleanup/retention jobs, periodic health or metric emission, outbox draining — anything you'd reach for `@Scheduled` in Spring.
+
+---
+
 ## Database (prozed-jdbc)
 
 Add `prozed-jdbc` and a JDBC driver (e.g. H2, PostgreSQL). `JdbcOperations` is registered as a bean automatically — just `@Inject` it.
@@ -789,7 +867,7 @@ The `spring-boot-maven-plugin` `repackage` goal produces a **nested** layout (`B
 
 | Module | Description |
 | --- | --- |
-| `prozed-core` | DI container, routing, embedded Tomcat server, configuration, classpath scanning |
+| `prozed-core` | DI container, routing, embedded Tomcat server, configuration, classpath scanning, scheduled tasks |
 | `prozed-jdbc` | `JdbcOperations`, connection pooling, transactions, Flyway migrations |
 | `prozed-jms` | `JmsOperations`, `@Listener` consumers (ActiveMQ) |
 | `prozed-test` | `@ProzedTest` JUnit 5 extension + `HttpClientOperations` |

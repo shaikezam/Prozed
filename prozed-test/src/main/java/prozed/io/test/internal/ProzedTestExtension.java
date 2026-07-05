@@ -17,6 +17,7 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
     private static final String JDBC_OPS_CLASS = "prozed.io.jdbc.JdbcOperations";
     private static final String SERVER_CLASS = "prozed.io.core.api.web.ProzedServer";
     private static final String CONTAINER_CLASS = "prozed.io.core.internal.di.ProzedContainer";
+    private static final String SCHEDULER_CONTAINER_CLASS = "prozed.io.core.api.scheduling.SchedulerContainer";
     private static final Logger LOGGER = LoggerFactory.getLogger(ProzedTestExtension.class);
 
     private boolean isCleanUpSupport = false;
@@ -70,6 +71,8 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         if (this.isCleanUpSupport) {
+            invokeScheduler("pause");
+
             Class<?> jdbcOpertaionsClass = Class.forName(JDBC_OPS_CLASS);
             Method getDataSourceMethod = jdbcOpertaionsClass.getMethod("getDataSource");
             javax.sql.DataSource dataSource = (javax.sql.DataSource) getDataSourceMethod.invoke(testJdbcOpsInstance);
@@ -78,12 +81,15 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
             Method setTestConnectionMethod = Class.forName(TEST_JDBC_OPS_CLASS).getMethod("setTestConnection", Connection.class);
             setTestConnectionMethod.invoke(testJdbcOpsInstance, conn);
             context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put(TEST_CONN_KEY, conn);
+            invokeScheduler("resume");
         }
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         if (this.isCleanUpSupport) {
+            invokeScheduler("pause");
+
             Connection conn = context.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).get(TEST_CONN_KEY, Connection.class);
             if (conn != null && !conn.isClosed()) {
                 try {
@@ -102,20 +108,35 @@ public class ProzedTestExtension implements BeforeEachCallback, AfterEachCallbac
         }
     }
 
+    private void invokeScheduler(String method) {
+        try {
+            Class<?> containerClass = Class.forName(CONTAINER_CLASS);
+            Class<?> schedulerClass = Class.forName(SCHEDULER_CONTAINER_CLASS);
+            Object scheduler = containerClass.getMethod("get", Class.class).invoke(containerInstance, schedulerClass);
+            if (scheduler != null) {
+                schedulerClass.getMethod(method).invoke(scheduler);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to {} scheduler during cleanUp", method, e);
+        }
+    }
+
     @Override
     public void afterAll(ExtensionContext context) {
         Thread serverThread = (Thread) context.getRoot()
                 .getStore(ExtensionContext.Namespace.GLOBAL)
                 .get(SERVER_THREAD_KEY);
 
-        interrupt(serverThread);
         try {
             Class<?> prozedServerClass = Class.forName(SERVER_CLASS);
-            Method resetMethod = prozedServerClass.getMethod("resetContainer");
-            resetMethod.invoke(null);
+            prozedServerClass.getMethod("shutdownCurrent").invoke(null);
+            interrupt(serverThread);
+            if (serverThread != null) {
+                serverThread.join(10000);
+            }
+            prozedServerClass.getMethod("resetContainer").invoke(null);
         } catch (Exception e) {
-            LOGGER.warn("Failed to reset ProzedServer.CONTAINER", e);
-
+            LOGGER.warn("Failed to shut down ProzedServer", e);
         }
     }
 

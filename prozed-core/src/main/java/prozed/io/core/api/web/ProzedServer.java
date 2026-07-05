@@ -24,6 +24,7 @@ public class ProzedServer implements Closeable {
 
     private final Tomcat tomcat;
     private static ProzedContainer CONTAINER = new ProzedContainer();
+    private static volatile ProzedServer CURRENT;
     private final Map<String, FilterWrapper> filters = new LinkedHashMap<>();
     private final AtomicBoolean closed = new AtomicBoolean(false);
 
@@ -35,8 +36,21 @@ public class ProzedServer implements Closeable {
         CONTAINER = new ProzedContainer();
     }
 
+    /**
+     * Close the server currently running in this JVM, if any. {@code start()} blocks in
+     * Tomcat's await loop, which does not unwind on thread interrupt — so a test harness
+     * needs this to stop the server (release its port) deterministically between runs.
+     */
+    public static void shutdownCurrent() {
+        ProzedServer server = CURRENT;
+        if (server != null) {
+            server.close();
+        }
+    }
+
     public ProzedServer() {
         this.tomcat = new Tomcat();
+        CURRENT = this;
     }
 
     public void start() {
@@ -60,6 +74,9 @@ public class ProzedServer implements Closeable {
     public void close() {
         if (!closed.compareAndSet(false, true)) {
             return;
+        }
+        if (CURRENT == this) {
+            CURRENT = null;
         }
         try {
             if (tomcat.getServer() != null && tomcat.getServer().getState().isAvailable()) {

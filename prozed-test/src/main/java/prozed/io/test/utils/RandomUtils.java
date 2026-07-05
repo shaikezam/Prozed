@@ -10,6 +10,10 @@ public class RandomUtils {
         return RANDOM.nextInt();
     }
 
+    public static int randomPositiveInt() {
+        return RANDOM.nextInt(Integer.MAX_VALUE) + 1;
+    }
+
     public static long randomLong() {
         return RANDOM.nextLong();
     }

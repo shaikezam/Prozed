@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
 import prozed.io.core.api.di.Inject;
+import prozed.io.core.api.scheduling.SchedulerContainer;
 import prozed.io.core.internal.reflection.PackageScanner;
 
 import java.io.BufferedReader;
@@ -39,6 +40,15 @@ public final class ProzedContainer {
     }
 
     public void preDestroy() {
+        // Quiesce scheduled tasks first: their jobs call into other beans (e.g. the JDBC
+        // pool), so an in-flight tick must not outlive the resources it depends on. The
+        // generic reverse-order pass below runs its hook again — SchedulerContainer is
+        // a leaf bean with no dependency edge to those resources, so ordering isn't
+        // otherwise guaranteed. SchedulerContainer.preDestroy is idempotent.
+        Object scheduler = beansMapping.get(SchedulerContainer.class);
+        if (scheduler != null) {
+            invokeHook(SchedulerContainer.class, scheduler, "preDestroy");
+        }
         invokeHook("preDestroy", true);
     }
 
@@ -54,15 +64,18 @@ public final class ProzedContainer {
         for (Class<?> clazz : beans) {
             Object bean = beansMapping.get(clazz);
             if (bean == null) continue;
+            invokeHook(clazz, bean, hookName);
+        }
+    }
 
-            try {
-                Method hook = clazz.getDeclaredMethod(hookName);
-                hook.invoke(bean);
-            } catch (NoSuchMethodException ignored) {
-                // hook not declared, that's fine
-            } catch (Exception e) {
-                throw new RuntimeException("Prozed: Failed to call " + hookName + "() on " + clazz.getName(), e);
-            }
+    private void invokeHook(Class<?> clazz, Object bean, String hookName) {
+        try {
+            Method hook = clazz.getDeclaredMethod(hookName);
+            hook.invoke(bean);
+        } catch (NoSuchMethodException ignored) {
+            // hook not declared, that's fine
+        } catch (Exception e) {
+            throw new RuntimeException("Prozed: Failed to call " + hookName + "() on " + clazz.getName(), e);
         }
     }
 

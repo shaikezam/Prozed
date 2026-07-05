@@ -2,6 +2,7 @@ package prozed.io.jms.internal;
 
 import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
@@ -13,7 +14,6 @@ import prozed.io.jms.api.DestinationType;
 import prozed.io.jms.api.Listener;
 
 import java.lang.IllegalStateException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,15 +25,23 @@ import static prozed.io.jms.utils.Constants.*;
 public class JmsRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(JmsRegistry.class);
     private final List<Connection> connections = new ArrayList<>();
-    private final ConnectionFactory connectionFactory;
+    private final JmsPoolConnectionFactory connectionFactory;
     private final PackageScanner packageScanner = new PackageScanner();
 
     public JmsRegistry() {
-        this.connectionFactory = new ActiveMQConnectionFactory(
+        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(
                 ProzedPropertiesWrapper.getProperty(JMS_USERNAME),
                 ProzedPropertiesWrapper.getProperty(JMS_PASSWORD),
                 ProzedPropertiesWrapper.getProperty(JMS_BROKER_URL)
         );
+        this.connectionFactory = new JmsPoolConnectionFactory();
+        this.connectionFactory.setConnectionFactory(activeMQConnectionFactory);
+        this.connectionFactory.setMaxConnections(Integer.parseInt(
+                ProzedPropertiesWrapper.getProperty(JMS_POOL_MAX_CONNECTIONS, DEFAULT_JMS_POOL_MAX_CONNECTIONS)));
+        this.connectionFactory.setMaxSessionsPerConnection(Integer.parseInt(
+                ProzedPropertiesWrapper.getProperty(JMS_POOL_MAX_SESSIONS_PER_CONNECTION, DEFAULT_JMS_POOL_MAX_SESSIONS_PER_CONNECTION)));
+        this.connectionFactory.setConnectionIdleTimeout(Integer.parseInt(
+                ProzedPropertiesWrapper.getProperty(JMS_POOL_IDLE_TIMEOUT, DEFAULT_JMS_POOL_IDLE_TIMEOUT)));
     }
 
     public void postInit() {
@@ -78,12 +86,16 @@ public class JmsRegistry {
 
     public void preDestroy() {
         LOGGER.info("Destroying JmsRegistry");
-        for (Connection connection : connections) {
-            try {
-                connection.close();
-            } catch (JMSException e) {
-                // ignore
+        try {
+            for (Connection connection : connections) {
+                try {
+                    connection.close();
+                } catch (JMSException e) {
+                    // ignore
+                }
             }
+        } finally {
+            connectionFactory.stop();
         }
     }
 

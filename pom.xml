@@ -47,6 +47,7 @@
         <flyway-core.version>12.6.2</flyway-core.version>
         <jakarta.jms-api.version>3.1.0</jakarta.jms-api.version>
         <activemq-client.version>6.2.6</activemq-client.version>
+        <pooled-jms.version>3.1.7</pooled-jms.version>
         <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
         <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
@@ -103,6 +104,11 @@
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-client</artifactId>
                 <version>${activemq-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.messaginghub</groupId>
+                <artifactId>pooled-jms</artifactId>
+                <version>${pooled-jms.version}</version>
             </dependency>
             <!-- TEST dependencies -->
             <dependency>

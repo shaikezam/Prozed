@@ -53,7 +53,6 @@ public class ProzedServer implements Closeable {
             setupTomcat();
             tomcat.start();
             LOGGER.info("ProzedServer started on port {}", ProzedPropertiesWrapper.getServicePort());
-            LOGGER.info("Scanning package: {}", ProzedPropertiesWrapper.getScanPackage());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             tomcat.getServer().await();
         } catch (LifecycleException e) {
@@ -97,6 +96,7 @@ public class ProzedServer implements Closeable {
 
         // Scan the user-provided package
         if (ProzedPropertiesWrapper.getScanPackage() != null && !ProzedPropertiesWrapper.getScanPackage().isEmpty()) {
+            LOGGER.info("Scanning package: {}", ProzedPropertiesWrapper.getScanPackage());
             scanner.scan(ProzedPropertiesWrapper.getScanPackage());
         }
         String fakeDocBase = new File(baseDir, "webapps").getAbsolutePath();

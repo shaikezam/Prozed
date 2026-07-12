@@ -11,12 +11,12 @@ services:
     image: mariadb:10.11
     container_name: task-tracker-mariadb
     environment:
-      MARIADB_ROOT_PASSWORD: root
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
     command: >
       sh -c "
       docker-entrypoint.sh mariadbd &
-      until mariadb-check --all-databases -uroot -proot > /dev/null 2>&1; do sleep 1; done;
-      mariadb -uroot -proot -e 'CREATE DATABASE IF NOT EXISTS project_db; CREATE DATABASE IF NOT EXISTS issue_db; CREATE DATABASE IF NOT EXISTS activity_db;';
+      until mariadb-check --all-databases -uroot -p$$MARIADB_ROOT_PASSWORD > /dev/null 2>&1; do sleep 1; done;
+      mariadb -uroot -p$$MARIADB_ROOT_PASSWORD -e 'CREATE DATABASE IF NOT EXISTS project_db; CREATE DATABASE IF NOT EXISTS issue_db; CREATE DATABASE IF NOT EXISTS activity_db;';
       wait"
     networks:
       - task-tracker-net
@@ -26,8 +26,8 @@ services:
     container_name: task-tracker-phpmyadmin
     environment:
       - PMA_HOST=task-tracker-mariadb
-      - PMA_USER=root
-      - PMA_PASSWORD=root
+      - PMA_USER=${DB_USER}
+      - PMA_PASSWORD=${DB_PASSWORD}
     ports:
       - "8093:80"
     depends_on:
@@ -38,6 +38,8 @@ services:
   project-service:
     image: eclipse-temurin:21-jre-alpine
     container_name: project-service
+    env_file:
+      - .env
     volumes:
       - ./project-service/target/project-service-fat.jar:/app.jar
     command: ["java", "-jar", "/app.jar"]
@@ -51,6 +53,8 @@ services:
   issue-service:
     image: eclipse-temurin:21-jre-alpine
     container_name: issue-service
+    env_file:
+      - .env
     volumes:
       - ./issue-service/target/issue-service-fat.jar:/app.jar
     command: ["java", "-jar", "/app.jar"]
@@ -64,6 +68,8 @@ services:
   activity-service:
     image: eclipse-temurin:21-jre-alpine
     container_name: activity-service
+    env_file:
+      - .env
     volumes:
       - ./activity-service/target/activity-service-fat.jar:/app.jar
     command: ["java", "-jar", "/app.jar"]

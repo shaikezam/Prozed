@@ -87,6 +87,7 @@ If you've ever wanted a "Spring Boot, but I can actually read the source" — th
 - 🗄️ Optional JDBC module: connection pooling, transactions, Flyway migrations
 - 📨 Optional JMS module: send/consume messages with `@Listener` (ActiveMQ)
 - 🧪 JUnit 5 integration testing that boots your real application, with optional per-test DB rollback
+- 🔧 `${VAR}` / `${VAR:default}` environment-variable placeholders in `prozed.properties` — container-friendly config
 
 ---
 
@@ -726,6 +727,45 @@ Database rollback is driven by `TestJdbcOperations`, which ships in the **`proze
 ## Configuration Reference
 
 All settings live in `prozed.properties` on the classpath.
+
+### Environment variable placeholders
+
+Any value in `prozed.properties` may contain `${VAR}` or `${VAR:default}` placeholders. At startup Prozed replaces them:
+
+1. **Environment variable** `VAR`, if set.
+2. Otherwise the inline **`default`** (the part after `:`), if provided.
+3. Otherwise an **empty string**.
+
+Resolution is environment-only (JVM `-D` system properties are not consulted) and runs once, non-recursively, when properties are loaded.
+
+```properties
+# ${DB_HOST} has no default — env var is required, else resolves to ""
+db.url=jdbc:mariadb://${DB_HOST}:${DB_PORT:3306}/app_db
+db.username=${DB_USER:root}
+db.password=${DB_PASSWORD}
+```
+
+This keeps secrets and per-environment values out of the packaged jar — ideal for containers, where Docker/Compose feed the variables:
+
+```yaml
+# docker-compose.yml
+issue-service:
+  image: eclipse-temurin:21-jre-alpine
+  env_file:
+    - .env          # DB_HOST, DB_PASSWORD, ... injected into the container env
+  command: ["java", "-jar", "/app.jar"]
+```
+
+```dotenv
+# .env
+DB_HOST=task-tracker-mariadb
+DB_PASSWORD=root
+# DB_PORT / DB_USER omitted — the ${...:default} in prozed.properties applies
+```
+
+> A placeholder with no matching env var **and** no inline default resolves to an empty string, not an error — a value marked **Required** below will then fail later at the point it is used. Provide a default or ensure the variable is set.
+
+See the [containerized microservices example](examples/microservices-containerized-example) for a full working stack.
 
 ### Core (`prozed-core`)
 

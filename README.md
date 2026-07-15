@@ -809,6 +809,10 @@ See the [containerized microservices example](examples/microservices-containeriz
 | `jms.pool.max-connections` | Max pooled connections | `10` |
 | `jms.pool.max-sessions-per-connection` | Max active sessions per connection | `500` |
 | `jms.pool.idle-timeout` | Idle connection timeout (ms) | `30000` |
+| `jms.redelivery.max-redeliveries` | Max redelivery attempts before a message is sent to the DLQ | `6` |
+| `jms.redelivery.initial-delay` | Delay before the first redelivery (ms) | `1000` |
+| `jms.redelivery.backoff-multiplier` | Multiplier applied to the delay per retry (only used when exponential backoff is enabled) | `5.0` |
+| `jms.redelivery.exponential-backoff` | Enable exponential backoff between retries | `false` |
 
 ### Example: full `prozed.properties`
 
@@ -832,6 +836,10 @@ jms.password=admin
 jms.pool.max-connections=10
 jms.pool.max-sessions-per-connection=500
 jms.pool.idle-timeout=30000
+jms.redelivery.max-redeliveries=6
+jms.redelivery.initial-delay=1000
+jms.redelivery.backoff-multiplier=5.0
+jms.redelivery.exponential-backoff=false
 ```
 
 ---

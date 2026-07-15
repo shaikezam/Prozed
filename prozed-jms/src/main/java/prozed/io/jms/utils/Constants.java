@@ -14,6 +14,7 @@ public class Constants {
     public static final String JMS_REDELIVERY_MAX_REDELIVERIES = "jms.redelivery.max-redeliveries";
     public static final String JMS_REDELIVERY_INITIAL_DELAY = "jms.redelivery.initial-delay";
     public static final String JMS_REDELIVERY_BACKOFF_MULTIPLIER = "jms.redelivery.backoff-multiplier";
+    public static final String JMS_REDELIVERY_EXPONENTIAL_BACKOFF = "jms.redelivery.exponential-backoff";
 
     public static final String DEFAULT_JMS_POOL_MAX_CONNECTIONS = "10";
     public static final String DEFAULT_JMS_POOL_MAX_SESSIONS_PER_CONNECTION = "500";
@@ -21,4 +22,5 @@ public class Constants {
     public static final String DEFAULT_JMS_REDELIVERY_MAX_REDELIVERIES = "6";
     public static final String DEFAULT_JMS_REDELIVERY_INITIAL_DELAY = "1000";
     public static final String DEFAULT_JMS_REDELIVERY_BACKOFF_MULTIPLIER = "5.0";
+    public static final String DEFAULT_JMS_REDELIVERY_EXPONENTIAL_BACKOFF = "false";
 }

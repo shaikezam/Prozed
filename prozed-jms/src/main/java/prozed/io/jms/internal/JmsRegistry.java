@@ -40,10 +40,10 @@ public class JmsRegistry {
                 ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_MAX_REDELIVERIES, DEFAULT_JMS_REDELIVERY_MAX_REDELIVERIES)));
         redeliveryPolicy.setInitialRedeliveryDelay(Long.parseLong(
                 ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_INITIAL_DELAY, DEFAULT_JMS_REDELIVERY_INITIAL_DELAY)));
-        double backOffMultiplier = Double.parseDouble(
-                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_BACKOFF_MULTIPLIER, DEFAULT_JMS_REDELIVERY_BACKOFF_MULTIPLIER));
-        redeliveryPolicy.setBackOffMultiplier(backOffMultiplier);
-        redeliveryPolicy.setUseExponentialBackOff(backOffMultiplier > 1);
+        redeliveryPolicy.setBackOffMultiplier(Double.parseDouble(
+                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_BACKOFF_MULTIPLIER, DEFAULT_JMS_REDELIVERY_BACKOFF_MULTIPLIER)));
+        redeliveryPolicy.setUseExponentialBackOff(Boolean.parseBoolean(
+                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_EXPONENTIAL_BACKOFF, DEFAULT_JMS_REDELIVERY_EXPONENTIAL_BACKOFF)));
         this.connectionFactory = new JmsPoolConnectionFactory();
         this.connectionFactory.setConnectionFactory(activeMQConnectionFactory);
         this.connectionFactory.setMaxConnections(Integer.parseInt(

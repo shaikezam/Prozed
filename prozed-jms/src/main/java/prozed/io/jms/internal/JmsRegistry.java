@@ -2,6 +2,7 @@ package prozed.io.jms.internal;
 
 import jakarta.jms.*;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.RedeliveryPolicy;
 import org.messaginghub.pooled.jms.JmsPoolConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,15 @@ public class JmsRegistry {
                 ProzedPropertiesWrapper.getProperty(JMS_PASSWORD),
                 ProzedPropertiesWrapper.getProperty(JMS_BROKER_URL)
         );
+        RedeliveryPolicy redeliveryPolicy = activeMQConnectionFactory.getRedeliveryPolicy();
+        redeliveryPolicy.setMaximumRedeliveries(Integer.parseInt(
+                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_MAX_REDELIVERIES, DEFAULT_JMS_REDELIVERY_MAX_REDELIVERIES)));
+        redeliveryPolicy.setInitialRedeliveryDelay(Long.parseLong(
+                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_INITIAL_DELAY, DEFAULT_JMS_REDELIVERY_INITIAL_DELAY)));
+        double backOffMultiplier = Double.parseDouble(
+                ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_BACKOFF_MULTIPLIER, DEFAULT_JMS_REDELIVERY_BACKOFF_MULTIPLIER));
+        redeliveryPolicy.setBackOffMultiplier(backOffMultiplier);
+        redeliveryPolicy.setUseExponentialBackOff(backOffMultiplier > 1);
         this.connectionFactory = new JmsPoolConnectionFactory();
         this.connectionFactory.setConnectionFactory(activeMQConnectionFactory);
         this.connectionFactory.setMaxConnections(Integer.parseInt(

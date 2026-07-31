@@ -20,7 +20,7 @@ Everything runs in one JVM: the web server, an in-memory database, and a message
 | Dependency injection | `UserService`, `UserRepository` | `@Bean` + `@Inject`, no XML |
 | JDBC access & transactions | `UserRepository` | `JdbcOperations.select/selectOne/update` + `inTransaction(...)` |
 | Flyway schema migrations | `db/migration/` | `V1__init.sql` creates `users`, `V2__insert.sql` seeds rows |
-| JMS messaging | `UserService`, `MailListener` | `JmsOperations` produces, `@Listener` consumes the `mail` queue |
+| JMS messaging | `UserService`, `MailListener` | `JmsOperations` produces with message properties, `@Listener` consumes the `mail` queue |
 | Servlet filters | `ProtectPathFilter`, `MethodNotAllowedFilter` | cookie auth (`401`) and method guard (`405`) |
 | Custom error responses | `UserController#getUser` | `HttpException` → `404` |
 | Integration testing | `UserControllerTest` | `@ProzedTest` boots the real app and drives it over HTTP |

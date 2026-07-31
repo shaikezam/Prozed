@@ -1,6 +1,7 @@
 package com.example.issue;
 
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prozed.io.core.api.di.Bean;
@@ -49,7 +50,7 @@ public class IssueController {
             "TODO", request.parentKey(), request.assignee(), priority);
 
         IssueEvent event = new IssueEvent(issueKey, request.projectKey(), request.type(), request.summary(), "CREATED");
-        jms.sendMessage(event, "issues.queue", DestinationType.QUEUE);
+        jms.sendMessage(event, "issues.queue", DestinationType.QUEUE, Map.of("eventType", "CREATED"));
 
         return issueKey;
     }
@@ -59,7 +60,7 @@ public class IssueController {
         jdbc.update("UPDATE issues SET status = ? WHERE issue_key = ?", request.status(), request.issueKey());
 
         IssueEvent event = new IssueEvent(request.issueKey(), null, null, null, "STATUS_" + request.status());
-        jms.sendMessage(event, "issues.queue", DestinationType.QUEUE);
+        jms.sendMessage(event, "issues.queue", DestinationType.QUEUE, Map.of("eventType", "TRANSITIONED"));
 
         return "Issue " + request.issueKey() + " moved to " + request.status() + ".";
     }

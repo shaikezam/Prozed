@@ -17,7 +17,9 @@ public class MailListener implements MessageListener {
     @Override
     public void onMessage(Message message) {
         try {
-            LOGGER.info("Message received from queue: {}", message.getBody(String.class));
+            String eventType = message.getStringProperty("eventType");
+            LOGGER.info("Message received from queue (eventType={}): {}",
+                    eventType, message.getBody(String.class));
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }

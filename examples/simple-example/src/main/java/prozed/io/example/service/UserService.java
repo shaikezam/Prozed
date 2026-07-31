@@ -7,8 +7,10 @@ import prozed.io.core.api.di.Inject;
 import prozed.io.example.model.User;
 import prozed.io.example.repository.UserRepository;
 import prozed.io.jms.JmsOperations;
+import prozed.io.jms.api.DestinationType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,11 +35,19 @@ public class UserService {
 
     public int createUser(User user) {
         Objects.requireNonNull(user, "User must not be null");
-        return userRepository.createUser(user);
+        int id = userRepository.createUser(user);
+        // the properties map travels in the JMS header, so MailListener can route on it
+        // without deserializing the JSON body
+        jmsOperations.sendMessage(user, "mail", DestinationType.QUEUE,
+                Map.of("eventType", "USER_CREATED", "userId", id));
+        LOGGER.debug("Published USER_CREATED for user {}.", id);
+        return id;
     }
 
     public void createUsers(List<User> users) {
         userRepository.createUsers(users);
+        jmsOperations.sendMessage(users, "mail", DestinationType.QUEUE,
+                Map.of("eventType", "USERS_CREATED", "batchSize", users.size()));
     }
 
     public void deleteUser(int id) {

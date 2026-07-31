@@ -27,7 +27,8 @@ public class ActivityListener implements MessageListener {
         try {
             String json = message.getBody(String.class);
             IssueEvent event = gson.fromJson(json, IssueEvent.class);
-            log.info("Recording activity {} for {}", event.action(), event.issueKey());
+            String eventType = message.getStringProperty("eventType");
+            log.info("Recording activity {} for {} (eventType={})", event.action(), event.issueKey(), eventType);
 
             StringBuilder detail = new StringBuilder(event.action() == null ? "UPDATED" : event.action());
             if (event.type() != null) {
@@ -35,6 +36,9 @@ public class ActivityListener implements MessageListener {
             }
             if (event.summary() != null) {
                 detail.append(": ").append(event.summary());
+            }
+            if (eventType != null) {
+                detail.append(" [").append(eventType).append(']');
             }
 
             jdbc.update("INSERT INTO activity (issue_key, action, detail) VALUES (?, ?, ?)",

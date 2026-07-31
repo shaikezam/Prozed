@@ -610,13 +610,21 @@ public class NotificationService {
         jms.sendMessage(user, "user.events", DestinationType.QUEUE);
     }
 
+    public void notifyUserCreated(User user) {
+        // message properties travel alongside the JSON body
+        jms.sendMessage(user, "user.events", DestinationType.QUEUE,
+                Map.of("eventType", "USER_CREATED"));
+    }
+
     public void broadcast(String text) {
         jms.sendRawMessage(text, "announcements", DestinationType.TOPIC);
     }
 }
 ```
 
-`sendMessage(...)` accepts a single object or a `Collection<?>` and serializes it to JSON with Gson. `sendRawMessage(...)` sends a raw string. `DestinationType` is `QUEUE` or `TOPIC`.
+`sendMessage(...)` accepts a single object or a `Collection<?>` and serializes it to JSON with Gson. `sendRawMessage(...)` sends a raw string. `DestinationType` is `QUEUE` or `TOPIC`. Each of these also has an overload taking a trailing `Map<String, Object> properties`, which sets JMS message properties (metadata carried in the message header, separate from the body) via `JMSProducer.setProperty`. Allowed value types are `Boolean`, `Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `String`, and `null`; any other type throws `MessageFormatRuntimeException` at send time. Property names must not start with `JMS` — that prefix is reserved.
+
+> The properties map is optional. The existing 3-argument `sendMessage(...)` / `sendRawMessage(...)` overloads are unchanged and set no properties; passing `null` or an empty map has the same effect.
 
 ### Consuming
 
@@ -632,7 +640,8 @@ public class UserEventListener implements MessageListener {
     @Override
     public void onMessage(Message message) {
         try {
-            LOG.info("Received: {}", message.getBody(String.class));
+            String eventType = message.getStringProperty("eventType");
+            LOG.info("Received ({}): {}", eventType, message.getBody(String.class));
         } catch (JMSException e) {
             throw new RuntimeException(e);
         }

@@ -9,6 +9,7 @@ import prozed.io.test.operations.HttpClientOperations;
 import prozed.io.test.operations.HttpClientOperations.DeserializedResponse;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,11 +26,13 @@ public class ActivityServiceTest {
 
         jms.sendMessage(
             new ActivityListener.IssueEvent("APP-1", "APP", "EPIC", "Authentication overhaul", "CREATED"),
-            "issues.queue", DestinationType.QUEUE);
+            "issues.queue", DestinationType.QUEUE, Map.of("eventType", "CREATED"));
 
         ActivityController.ActivityRecord record = awaitRecord("APP-1");
 
-        assertEquals("CREATED EPIC: Authentication overhaul", record.detail());
+        // the trailing [CREATED] proves the JMS property survived the broker round trip —
+        // ActivityListener reads it back with message.getStringProperty("eventType")
+        assertEquals("CREATED EPIC: Authentication overhaul [CREATED]", record.detail());
     }
 
     // The listener consumes off the queue on another thread, so poll the HTTP endpoint until our record lands.

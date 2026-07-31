@@ -13,6 +13,7 @@ import prozed.io.jms.api.DestinationType;
 import prozed.io.jms.internal.JmsRegistry;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 @Bean
@@ -25,27 +26,45 @@ public class JmsOperations {
     private JmsRegistry jmsRegistry;
 
     public void sendRawMessage(String message, String brokerDestination, DestinationType destinationType) {
+        this.sendRawMessage(message, brokerDestination, destinationType, null);
+    }
+
+    public void sendRawMessage(String message, String brokerDestination, DestinationType destinationType,
+                               Map<String, Object> properties) {
         try (JMSContext context = jmsRegistry.getConnectionFactory().createContext()) {
             Destination destination = switch (destinationType) {
                 case QUEUE -> context.createQueue(brokerDestination);
                 case TOPIC -> context.createTopic(brokerDestination);
             };
             JMSProducer producer = context.createProducer();
+            if (properties != null) {
+                properties.forEach(producer::setProperty);
+            }
             producer.send(destination, message);
             LOGGER.debug("Message sent.");
         }
     }
 
     public void sendMessage(Object message, String prozedDestination, DestinationType destinationType) {
+        this.sendMessage(message, prozedDestination, destinationType, null);
+    }
+
+    public void sendMessage(Object message, String prozedDestination, DestinationType destinationType,
+                            Map<String, Object> properties) {
         Objects.requireNonNull(message, "Message must not be null.");
         String rawMessage = gson.toJson(message, message.getClass());
-        this.sendRawMessage(rawMessage, prozedDestination, destinationType);
+        this.sendRawMessage(rawMessage, prozedDestination, destinationType, properties);
     }
 
     public void sendMessage(Collection<?> message, String prozedDestination, DestinationType destinationType) {
+        this.sendMessage(message, prozedDestination, destinationType, null);
+    }
+
+    public void sendMessage(Collection<?> message, String prozedDestination, DestinationType destinationType,
+                            Map<String, Object> properties) {
         Objects.requireNonNull(message, "Message must not be null.");
         String rawMessage = gson.toJson(message, new TypeToken<Collection<?>>() {
         }.getType());
-        this.sendRawMessage(rawMessage, prozedDestination, destinationType);
+        this.sendRawMessage(rawMessage, prozedDestination, destinationType, properties);
     }
 }

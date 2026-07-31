@@ -622,7 +622,17 @@ public class NotificationService {
 }
 ```
 
-`sendMessage(...)` accepts a single object or a `Collection<?>` and serializes it to JSON with Gson. `sendRawMessage(...)` sends a raw string. `DestinationType` is `QUEUE` or `TOPIC`. Each of these also has an overload taking a trailing `Map<String, Object> properties`, which sets JMS message properties (metadata carried in the message header, separate from the body) via `JMSProducer.setProperty`. Allowed value types are `Boolean`, `Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `String`, and `null`; any other type throws `MessageFormatRuntimeException` at send time. Property names must not start with `JMS` — that prefix is reserved.
+`sendMessage(...)` accepts a single object or a `Collection<?>` and serializes it to JSON with Gson.
+
+`sendRawMessage(...)` sends a raw string.
+
+`DestinationType` is `QUEUE` or `TOPIC`.
+
+Each of these also has an overload taking a trailing `Map<String, Object> properties`, which sets JMS message properties (metadata carried in the message header, separate from the body) via `JMSProducer.setProperty`.
+
+Allowed value types are `Boolean`, `Byte`, `Short`, `Integer`, `Long`, `Float`, `Double`, `String`, and `null`; any other type throws `MessageFormatRuntimeException` at send time.
+
+Property names must not start with `JMS` — that prefix is reserved.
 
 > The properties map is optional. The existing 3-argument `sendMessage(...)` / `sendRawMessage(...)` overloads are unchanged and set no properties; passing `null` or an empty map has the same effect.
 

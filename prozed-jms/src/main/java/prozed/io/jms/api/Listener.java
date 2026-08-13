@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface Listener {
     String destination();
     DestinationType destinationType();
+    boolean durable() default false;
+    String subscriptionName() default "";
 }

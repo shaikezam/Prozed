@@ -661,6 +661,21 @@ public class UserEventListener implements MessageListener {
 
 > A class annotated with `@Listener` **must** also be a `@Bean` and implement `MessageListener`; Prozed fails fast at startup with a clear message otherwise.
 
+#### Durable topic subscriptions
+
+By default, a `TOPIC` listener only receives messages published while it's connected — anything published while it's offline is lost. Set `durable = true` (plus a `subscriptionName`) to keep the backlog on the broker across restarts:
+
+```java
+@Bean
+@Listener(destination = "activity.topic", destinationType = DestinationType.TOPIC,
+    durable = true, subscriptionName = "activity-service-sub")
+public class ActivityTopicListener implements MessageListener {
+    // ...
+}
+```
+
+Durable listeners require `jms.client-id` to be configured (see the config table below); the connection's client ID is derived as `<jms.client-id>-<subscriptionName>`, so multiple durable listeners in the same service don't collide. Prozed fails fast at startup if `durable = true` is set on a `QUEUE` destination, if `subscriptionName` is blank, or if `jms.client-id` isn't configured.
+
 ---
 
 ## Testing (prozed-test)
@@ -832,6 +847,7 @@ See the [containerized microservices example](examples/microservices-containeriz
 | `jms.redelivery.initial-delay` | Delay before the first redelivery (ms) | `1000` |
 | `jms.redelivery.backoff-multiplier` | Multiplier applied to the delay per retry (only used when exponential backoff is enabled) | `5.0` |
 | `jms.redelivery.exponential-backoff` | Enable exponential backoff between retries | `false` |
+| `jms.client-id` | Base client ID for durable topic subscriptions. Required only if any `@Listener` sets `durable = true`. Each durable listener's connection uses `<jms.client-id>-<subscriptionName>`, so one value is safe to share across multiple durable listeners in the same service. | — |
 
 ### Example: full `prozed.properties`
 
@@ -859,6 +875,7 @@ jms.redelivery.max-redeliveries=6
 jms.redelivery.initial-delay=1000
 jms.redelivery.backoff-multiplier=5.0
 jms.redelivery.exponential-backoff=false
+jms.client-id=my-service
 ```
 
 ---

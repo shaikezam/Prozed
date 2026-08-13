@@ -27,6 +27,7 @@ public class JmsRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(JmsRegistry.class);
     private final List<Connection> connections = new ArrayList<>();
     private final JmsPoolConnectionFactory connectionFactory;
+    private final ActiveMQConnectionFactory durableConnectionFactory;
     private final PackageScanner packageScanner = new PackageScanner();
 
     public JmsRegistry() {
@@ -35,6 +36,7 @@ public class JmsRegistry {
                 ProzedPropertiesWrapper.getProperty(JMS_PASSWORD),
                 ProzedPropertiesWrapper.getProperty(JMS_BROKER_URL)
         );
+        this.durableConnectionFactory = activeMQConnectionFactory;
         RedeliveryPolicy redeliveryPolicy = activeMQConnectionFactory.getRedeliveryPolicy();
         redeliveryPolicy.setMaximumRedeliveries(Integer.parseInt(
                 ProzedPropertiesWrapper.getProperty(JMS_REDELIVERY_MAX_REDELIVERIES, DEFAULT_JMS_REDELIVERY_MAX_REDELIVERIES)));
@@ -54,6 +56,12 @@ public class JmsRegistry {
                 ProzedPropertiesWrapper.getProperty(JMS_POOL_IDLE_TIMEOUT, DEFAULT_JMS_POOL_IDLE_TIMEOUT)));
     }
 
+    // test-only seam: bypass property-driven bootstrap, inject factories directly
+    JmsRegistry(JmsPoolConnectionFactory connectionFactory, ActiveMQConnectionFactory durableConnectionFactory) {
+        this.connectionFactory = connectionFactory;
+        this.durableConnectionFactory = durableConnectionFactory;
+    }
+
     public void postInit() {
         LOGGER.info("Initializing JmsRegistry");
         ProzedContainer prozedContainer = ProzedServer.getContainer();
@@ -70,7 +78,8 @@ public class JmsRegistry {
             }
 
             try {
-                this.registerListener(listenerInstance, annotation.destination(), annotation.destinationType());
+                this.registerListener(listenerInstance, annotation.destination(), annotation.destinationType(),
+                        annotation.durable(), annotation.subscriptionName());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to register listener " + listener.getName(), e);
             }
@@ -81,14 +90,29 @@ public class JmsRegistry {
         return connectionFactory;
     }
 
-    private void registerListener(Object listener, String prozedDestination, DestinationType destinationType) throws Exception {
-        Connection conn = connectionFactory.createConnection();
+    void registerListener(Object listener, String prozedDestination, DestinationType destinationType,
+                           boolean durable, String subscriptionName) throws Exception {
+        if (durable && destinationType != DestinationType.TOPIC) {
+            throw new IllegalStateException("Durable subscriptions are only supported for TOPIC destinations.");
+        }
+        if (durable && subscriptionName.isBlank()) {
+            throw new IllegalStateException("Durable listener on destination " + prozedDestination
+                    + " must declare a subscriptionName.");
+        }
+
+        Connection conn = durable ? durableConnectionFactory.createConnection() : connectionFactory.createConnection();
+        if (durable) {
+            String baseClientId = ProzedPropertiesWrapper.getProperty(JMS_CLIENT_ID);
+            conn.setClientID(baseClientId + "-" + subscriptionName);
+        }
         Session session = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = switch (destinationType) {
             case QUEUE -> session.createQueue(prozedDestination);
             case TOPIC -> session.createTopic(prozedDestination);
         };
-        MessageConsumer consumer = session.createConsumer(destination);
+        MessageConsumer consumer = durable
+                ? session.createDurableConsumer((Topic) destination, subscriptionName)
+                : session.createConsumer(destination);
         consumer.setMessageListener((MessageListener) listener);
         conn.start();
         connections.add(conn);

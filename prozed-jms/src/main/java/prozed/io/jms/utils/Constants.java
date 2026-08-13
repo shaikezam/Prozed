@@ -15,6 +15,7 @@ public class Constants {
     public static final String JMS_REDELIVERY_INITIAL_DELAY = "jms.redelivery.initial-delay";
     public static final String JMS_REDELIVERY_BACKOFF_MULTIPLIER = "jms.redelivery.backoff-multiplier";
     public static final String JMS_REDELIVERY_EXPONENTIAL_BACKOFF = "jms.redelivery.exponential-backoff";
+    public static final String JMS_CLIENT_ID = "jms.client-id";
 
     public static final String DEFAULT_JMS_POOL_MAX_CONNECTIONS = "10";
     public static final String DEFAULT_JMS_POOL_MAX_SESSIONS_PER_CONNECTION = "500";

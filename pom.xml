@@ -6,7 +6,7 @@
 
     <groupId>io.github.shaikezam</groupId>
     <artifactId>prozed-parent</artifactId>
-    <version>1.0.8-SNAPSHOT</version>
+    <version>1.0.8</version>
     <packaging>pom</packaging>
 
     <name>Prozed Parent</name>
@@ -46,7 +46,7 @@
         <slf4j-api.version>2.0.17</slf4j-api.version>
         <flyway-core.version>12.6.2</flyway-core.version>
         <jakarta.jms-api.version>3.1.0</jakarta.jms-api.version>
-        <activemq-client.version>6.2.6</activemq-client.version>
+        <activemq-client.version>6.4.0</activemq-client.version>
         <pooled-jms.version>3.1.7</pooled-jms.version>
         <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
         <maven-shade-plugin.version>3.6.2</maven-shade-plugin.version>
